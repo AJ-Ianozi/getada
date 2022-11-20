@@ -4,7 +4,7 @@ This is my attempt at an installer for Alire.  It currently supports all non-win
 * Linux, built against glibc
 * MacOS
 
-For Windows, please use the current windows installer exe located on Alire's [https://github.com/alire-project/alire/releases](Releases Page).
+For Windows, please use the current windows installer exe located on [Alire's Releases Page](https://github.com/alire-project/alire/releases).
 
 It is in very early beta, so please report any bugs you find!
 
