@@ -14,7 +14,7 @@ Right now `curl` and `chmod` are required to run this.  I plan on utilizing AWS 
 ## How to get it?
 Easiest way is to download the latest .zip, extract it, and run it.
 
-If you want to build it, you can also clone this repository, `cd` to the directory, then build it with `alr build` in Alire.
+If you want to build it, you can also clone this repository, `cd` to the directory, then build it with `alr update && alr build` in Alire.
 
 ### On MacOS
 If you're running on MacOS, and you get a message about the program not being verified, then run the following command on the extracted `getada` binary before attempting to run it.  E.g.:

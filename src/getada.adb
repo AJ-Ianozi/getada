@@ -29,7 +29,7 @@ procedure Getada is
         "Welcome to the unofficial Alire Installer (""GetAda"")!" & CR & LF &
         "Alire is the official Ada Package Manager. For more information" &
         CR & LF & "please visit https://ada-lang.io or https://alire.ada.dev" &
-        CR & LF & "This program is Copyright (C) 2022 A.J. Ianozi";
+        CR & LF & "Copyright (C) 2022 A.J. Ianozi licensed GPL3.";
    begin
       Put_Line (Welcome_Message);
    end Show_Welcome;
