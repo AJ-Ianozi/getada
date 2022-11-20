@@ -91,7 +91,7 @@ package body Installer is
 --         raise Invalid_Download with
 --            "Unable to download: File is not of type zip.";
 --      end if;
-
+   null;
    end Download;
 
    procedure Extract_Alire (File : String) is
