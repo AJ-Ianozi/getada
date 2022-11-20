@@ -1,0 +1,17 @@
+name = "getada"
+description = "The unofficial installer for Alire."
+version = "0.1.0-dev"
+licenses = "GPL-3.0-only"
+
+authors = ["A.J. Ianozi"]
+maintainers = ["A.J. Ianozi <aj@ianozi.com>"]
+maintainers-logins = ["AJ-Ianozi"]
+
+executables = ["getada"]
+
+[[depends-on]]
+#  aws will be added once we have the new version with 
+#   SSL support in Alire.
+# aws = "^21.0.0"
+json = "^5.0.3"
+zipada = "^58.0.0"
