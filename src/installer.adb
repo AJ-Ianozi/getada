@@ -91,7 +91,7 @@ package body Installer is
 --         raise Invalid_Download with
 --            "Unable to download: File is not of type zip.";
 --      end if;
-   null;
+      null;
    end Download;
 
    procedure Extract_Alire (File : String) is
@@ -103,7 +103,7 @@ package body Installer is
       --  then this will break.
       --  Also this won't work on Windows :)
       if Exists (Zip_File, "bin/alr") then
-         Extract (from => File, what => "bin/alr", rename => "alr");
+         Extract (from => File, what => "bin/alr", rename => Alire);
       else
          raise Invalid_File
            with "Archive does not contain bin/alr." &
@@ -179,46 +179,45 @@ package body Installer is
       Version : constant String :=
         (if Options.Version /= Null_Unbounded_String then
            To_String (Options.Version)
-         elsif Ada.Environment_Variables.Exists ("GETADA_ALIRE_VERSION") then
-           Ada.Environment_Variables.Value ("GETADA_ALIRE_VERSION")
+         elsif Ada.Environment_Variables.Exists (Defaults.Ver_Env) then
+           Ada.Environment_Variables.Value (Defaults.Ver_Env)
          else "");
 
-      Metadata_Dir : constant String :=
+      Tmp_Dir : constant String :=
         Correct_Path
           (Home_Dir,
-           (if Options.Metadata_Dir /= Null_Unbounded_String then
-              To_String (Options.Metadata_Dir)
+           (if Options.Tmp_Dir /= Null_Unbounded_String then
+              To_String (Options.Tmp_Dir)
             else
-              (if Ada.Environment_Variables.Exists ("GETADA_TMP") then
-                 Ada.Environment_Variables.Value ("GETADA_TMP")
-               else Home_Dir & "/.cache/getada")));
+              (if Ada.Environment_Variables.Exists (Defaults.Tmp_Env) then
+                 Ada.Environment_Variables.Value (Defaults.Tmp_Env)
+               else Home_Dir & Defaults.Tmp_Dir)));
 
       --  TODO: Need to decide on a location...
       --  since alire uses ~/.config/alire for everything maybe
-      --  we have ~/.config/alire/env.sh instead of ~/.alire/env.sh
-      --  And should default binary be moved to ~/.config/alire/bin ?
-      Alire_Cfg : constant String :=
+      --  we have ~/.config/getada/env.sh instead of ~/.getada/env.sh ?
+      Cfg_Dir : constant String :=
         Correct_Path
           (Home_Dir,
-           (if Options.Alire_Cfg /= Null_Unbounded_String then
-              To_String (Options.Alire_Cfg)
+           (if Options.Cfg_Dir /= Null_Unbounded_String then
+              To_String (Options.Cfg_Dir)
             else
-              (if Ada.Environment_Variables.Exists ("GETADA_CFG") then
-                 Ada.Environment_Variables.Value ("GETADA_CFG")
-               else Home_Dir & "/.alire")));
+              (if Ada.Environment_Variables.Exists (Defaults.Cfg_Env) then
+                 Ada.Environment_Variables.Value (Defaults.Cfg_Env)
+               else Home_Dir & Defaults.Cfg_Dir)));
       --  TODO: Put this in Program Files on Windows +
       --       and Home_Dir/Applications/bin on MacOS?
       --       do something like:
       --       Local_Apps: constant String := Local_Settings.App_Dir;
-      Alire_Bin : constant String :=
+      Bin_Dir : constant String :=
         Correct_Path
           (Home_Dir,
-           (if Options.Alire_Bin /= Null_Unbounded_String then
-              To_String (Options.Alire_Bin)
+           (if Options.Bin_Dir /= Null_Unbounded_String then
+              To_String (Options.Bin_Dir)
             else
-              (if Ada.Environment_Variables.Exists ("GETADA_BIN") then
-                 Ada.Environment_Variables.Value ("GETADA_BIN")
-               else Alire_Cfg & "/bin")));
+              (if Ada.Environment_Variables.Exists (Defaults.Bin_Env) then
+                 Ada.Environment_Variables.Value (Defaults.Bin_Env)
+               else Cfg_Dir & Defaults.Bin_Dir)));
 
       Our_Shells : constant Shell_Array :=
         (if not Options.No_Update_Path then Available_Shells (Current_Platform)
@@ -228,20 +227,23 @@ package body Installer is
            "I will attempt to fetch version """ & Version & """"
          else "No version has been specified. Will attempt to install the " &
            "latest version of Alire." & CR & LF &
-           "(To specify a version, pass --version=x.y.z)") &
-        CR & LF &
-        "Temporary files will be stored in the following directory: " & CR &
-        LF & Metadata_Dir & CR & LF & CR & LF &
-        "(This can be changed with the ""GETADA_TMP"" environment variable " &
-        "or passing --meta=/directory/here)" & CR & LF & CR & LF &
-        "Any of alire's scripts or helper files will store in the following " &
-        "location:" & CR & LF & Alire_Cfg & CR & LF & CR & LF &
-        "(This can be changed either by setting the ""GETADA_CFG"" " &
-        "environment variable or passing --cfg=/directory/here)" & CR & LF &
-        CR & LF & "Alire's binary will be installed as 'alr' in the " &
-        " following location:" & CR & LF & Alire_Bin & CR & LF & CR & LF &
-        "(This can be changed either by setting the ""GETADA_BIN"" " &
-        "environment variable or passing --bin=/directory/here)" & CR & LF;
+           "(To specify a version, pass --version=x.y.z)")
+        & CR & LF &
+        "Temporary files will be stored in the following directory: "
+        & CR & LF & Tmp_Dir & CR & LF & CR & LF &
+        "(This can be changed with the """ & Defaults.Tmp_Env & """ " &
+        "environment variable or passing --meta=/directory/here)" & CR & LF
+        & CR & LF & "Any of alire's scripts or helper files will store in " &
+        "the following location:"
+        & CR & LF & Cfg_Dir & CR & LF & CR & LF &
+        "(This can be changed either by setting the """ & Defaults.Cfg_Env &
+        """ environment variable or passing --cfg=/directory/here)"
+        & CR & LF & CR & LF &
+        "Alire's binary will be installed as """ & Alire & """ in the " &
+        "following location:" & CR & LF & Bin_Dir & CR & LF & CR & LF &
+        "(This can be changed either by setting the """ & Defaults.Bin_Env
+        & """ " & "environment variable or passing --bin=/directory/here)"
+        & CR & LF;
    begin
 
       if Current_Platform.OS = Windows then
@@ -371,17 +373,17 @@ package body Installer is
          File_Name : constant String :=
            URL ((Index (URL, "/", Ada.Strings.Backward) + 1) .. URL'Last);
          --  This is the full path to save the file.
-         Save_Path : constant String := Metadata_Dir & "/" & File_Name;
+         Save_Path : constant String := Tmp_Dir & "/" & File_Name;
       begin
          --  Create the metadata directory if it doesn't alerady exist.
-         if not Ada.Directories.Exists (Metadata_Dir) then
-            Put_Line ("Creating Directory: " & Metadata_Dir);
-            Ada.Directories.Create_Path (Metadata_Dir);
+         if not Ada.Directories.Exists (Tmp_Dir) then
+            Put_Line ("Creating Directory: " & Tmp_Dir);
+            Ada.Directories.Create_Path (Tmp_Dir);
          else
-            Put_Line ("Directory " & Metadata_Dir & " detected.");
+            Put_Line ("Directory " & Tmp_Dir & " detected.");
          end if;
          --  Metadata directory is current working directory.
-         Ada.Directories.Set_Directory (Metadata_Dir);
+         Ada.Directories.Set_Directory (Tmp_Dir);
          --  Download the zip if it doesn't already exist.
          if not Ada.Directories.Exists (Save_Path) then
             Put_Line ("Downloading " & URL & " to " & Save_Path);
@@ -393,33 +395,33 @@ package body Installer is
               ("file " & Save_Path & " already exists, skipping download.");
          end if;
          --  Create the config and directories if they don't exist.
-         if not Ada.Directories.Exists (Alire_Cfg) then
-            Put_Line ("Creating Directory: " & Alire_Cfg);
-            Ada.Directories.Create_Path (Alire_Cfg);
+         if not Ada.Directories.Exists (Cfg_Dir) then
+            Put_Line ("Creating Directory: " & Cfg_Dir);
+            Ada.Directories.Create_Path (Cfg_Dir);
          else
-            Put_Line ("Directory " & Alire_Cfg & " detected.");
+            Put_Line ("Directory " & Cfg_Dir & " detected.");
          end if;
-         if not Ada.Directories.Exists (Alire_Bin) then
-            Put_Line ("Creating Directory: " & Alire_Bin);
-            Ada.Directories.Create_Path (Alire_Bin);
+         if not Ada.Directories.Exists (Bin_Dir) then
+            Put_Line ("Creating Directory: " & Bin_Dir);
+            Ada.Directories.Create_Path (Bin_Dir);
          else
-            Put_Line ("Directory " & Alire_Bin & " detected.");
+            Put_Line ("Directory " & Bin_Dir & " detected.");
          end if;
          --  Binary directory is current working directory.
-         Ada.Directories.Set_Directory (Alire_Bin);
+         Ada.Directories.Set_Directory (Bin_Dir);
       --  Check if alr already exists.  If it does, confirm that they want to
          --   overwrite it.
-         if Ada.Directories.Exists (Alire_Bin & "/alr")
+         if Ada.Directories.Exists (Bin_Dir & "/" & Alire)
            and then
              Get_Answer
-               ("The following file already exists:" & Alire_Bin &
-                "/alr ... Replace it?",
+               ("The following file already exists:" & Bin_Dir &
+                "/" & Alire & " ... Replace it?",
                 Default_Answer => Yes) =
              No
          then
             raise User_Aborted;
          end if;
-         Put_Line ("Extracting: " & Save_Path & " to " & Alire_Bin);
+         Put_Line ("Extracting: " & Save_Path & " to " & Bin_Dir);
          Extract_Alire (Save_Path);
       end;
       --  Verify alire is there and executable (we may have to set +x if not)
@@ -430,7 +432,7 @@ package body Installer is
               (if Current_Platform.OS = MacOS then False else True),
             others => False);
          Successfully_Executed : Boolean;
-         Alire_Binary          : constant String := Alire_Bin & "/alr";
+         Alire_Binary          : constant String := Bin_Dir & "/" & Alire;
          Alire_Args            : constant GNAT.OS_Lib.Argument_List (1 .. 1) :=
            (1 => new String'("--version"));
       begin
@@ -497,7 +499,7 @@ package body Installer is
                  Home_Dir & "/" & To_String (Config.Config_File);
                Shell_File : File_Type;
                Env_Path   : constant String :=
-                 Alire_Cfg & "/" & Get_Shell_Env (Config.Shell);
+                 Cfg_Dir & "/" & Get_Shell_Env (Config.Shell);
                Command : constant String :=
                  Get_Env_Command (Config.Shell, Env_Path);
                No_Source_In_Env : Boolean := True;
@@ -508,7 +510,7 @@ package body Installer is
                      Env_File : File_Type;
                   begin
                      Create (Env_File, Out_File, Env_Path);
-                     Write_Env_File (Config.Shell, Env_File, Alire_Bin);
+                     Write_Env_File (Config.Shell, Env_File, Bin_Dir);
                      Close (Env_File);
                   end;
                end if;
@@ -557,13 +559,13 @@ package body Installer is
             for I in Our_Shells'Range loop
                Add_Env_To_Config (Our_Shells (I));
             end loop;
-            if Index (":" & Alire_Bin & ":", ":" & Current_Path & ":") = 0 then
+            if Index (":" & Bin_Dir & ":", ":" & Current_Path & ":") = 0 then
                Put_Line
-                 (Alire_Bin &
+                 (Bin_Dir &
                   " not detected in Path.  You may need to reinitate " &
                   "your session.");
             else
-               Put_Line (Alire_Bin & " already detected in $PATH.");
+               Put_Line (Bin_Dir & " already detected in $PATH.");
             end if;
          end;
       end if;

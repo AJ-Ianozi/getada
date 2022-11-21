@@ -98,12 +98,12 @@ package body Options is
                  or else Check_Argument
                    (Options.Version, "-v", "--version=", Arg, I, Skip)
                  or else Check_Argument
-                   (Options.Metadata_Dir, "-m", "--meta=", Arg,
+                   (Options.Tmp_Dir, "-m", "--meta=", Arg,
                     I, Skip)
                  or else Check_Argument
-                   (Options.Alire_Bin, "-b", "--bin=", Arg, I, Skip)
+                   (Options.Bin_Dir, "-b", "--bin=", Arg, I, Skip)
                  or else Check_Argument
-                   (Options.Alire_Cfg, "-c", "--cfg=", Arg, I, Skip)
+                   (Options.Cfg_Dir, "-c", "--cfg=", Arg, I, Skip)
                  or else raise Unknown_Argument
                    with "Unknown Argument: " & Arg & CR & LF &
                    "Run app with arguments -h or --help to show help."
