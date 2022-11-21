@@ -45,10 +45,10 @@ procedure Getada is
         LF &
         "You can also set the version and metadata / binary directory by " &
         "setting the following environment variables:" & CR & LF &
-        " * ""GETADA_ALIRE_VERSION"" for Alire's version" & CR & LF &
-        " * ""GETADA_TMP"" for metadata directory" & CR & LF &
-        " * ""GETADA_CFG"" for config directory" & CR & LF &
-        " * ""GETADA_BIN"" for binary directory" & CR & LF &
+        " * """ & Defaults.Ver_Env & """  for Alire's version" & CR & LF &
+        " * """ & Defaults.Tmp_Env & """ for metadata directory" & CR & LF &
+        " * """ & Defaults.Cfg_Env & """ for config directory" & CR & LF &
+        " * """ & Defaults.Bin_Env & """ for binary directory" & CR & LF &
         "That's it for right now!";
    begin
       Put_Line (Help_Message);

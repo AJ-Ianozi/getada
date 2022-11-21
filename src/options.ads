@@ -22,9 +22,9 @@ package Options is
    --  This will be set if we detect a version
    type Program_Options is record
       Version        : Unbounded_String := Null_Unbounded_String;
-      Metadata_Dir   : Unbounded_String := Null_Unbounded_String;
-      Alire_Cfg      : Unbounded_String := Null_Unbounded_String;
-      Alire_Bin      : Unbounded_String := Null_Unbounded_String;
+      Tmp_Dir        : Unbounded_String := Null_Unbounded_String;
+      Cfg_Dir        : Unbounded_String := Null_Unbounded_String;
+      Bin_Dir        : Unbounded_String := Null_Unbounded_String;
       Show_Help      : Boolean          := False;
       No_Update_Path : Boolean          := False;
    end record;

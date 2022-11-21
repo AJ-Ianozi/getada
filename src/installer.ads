@@ -20,6 +20,23 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Directories;
 with Options;               use Options;
 package Installer is
+   package Defaults is
+      --  Directories
+      Tmp_Dir : constant String := "/.cache/getada";
+      Cfg_Dir : constant String := "/.getada";
+      Bin_Dir : constant String := "/bin";
+
+      --  Environmental Variables
+      Tmp_Env : constant String := "GETADA_TMP";
+      Cfg_Env : constant String := "GETADA_CFG";
+      Bin_Env : constant String := "GETADA_BIN";
+      Ver_Env : constant String := "GETADA_ALIRE_VERSION";
+
+   end Defaults;
+
+   --  The binary for Alire.
+   Alire : constant String := "alr";
+
    Invalid_Version, Invalid_Download, Invalid_File, No_Environment_Variable,
    OS_Not_Yet_Supported, User_Aborted : exception;
    type Yes_or_No is (No, Yes, NA);
