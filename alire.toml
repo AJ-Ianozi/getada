@@ -1,6 +1,6 @@
 name = "getada"
 description = "The unofficial installer for Alire."
-version = "0.1.0-dev"
+version = "0.1.1-dev"
 licenses = "GPL-3.0-only"
 
 authors = ["A.J. Ianozi"]
