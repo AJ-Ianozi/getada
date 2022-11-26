@@ -25,7 +25,7 @@ jobs:
         alr -n build --release
       
     - name: Compress getada
-    - run: tar -cf getada-development-linux.tar bin
+      run: tar -cf getada-development-linux.tar bin
     
     - name: Uploadgetada
       uses: actions/upload-artifact@v2
