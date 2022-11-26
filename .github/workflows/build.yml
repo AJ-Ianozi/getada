@@ -32,3 +32,56 @@ jobs:
       with:
          name: getada-development-linux.tar
          path: getada-development-linux.tar
+
+
+  build-windows:
+    runs-on: windows-latest
+    
+    steps: 
+    
+      - name: Set up alire
+        uses: alire-project/setup-alire@v1
+
+      - name: Checkout
+        uses: actions/checkout@v3
+    
+      - name: Build alire
+        run: >
+         alr -n update &&
+         alr -n build --release
+      
+      - name: Compress getada
+        run: zip -r getada-development-win.zip bin
+    
+      - name: Uploadgetada
+        uses: actions/upload-artifact@v2
+        with:
+         name: getada-development-win.tar
+         path: getada-development-win.tar
+
+
+  build-macos:
+    runs-on: macos-latest
+    
+    steps: 
+    
+      - name: Set up alire
+        uses: alire-project/setup-alire@v1
+
+      - name: Checkout
+        uses: actions/checkout@v3
+    
+      - name: Build alire
+        run: >
+         alr -n update &&
+         alr -n build --release
+      
+      - name: Compress getada
+        run: zip -r getada-development-macos.zip bin
+    
+      - name: Uploadgetada
+        uses: actions/upload-artifact@v2
+        with:
+         name: getada-development-macos.tar
+         path: getada-development-macos.tar
+  
