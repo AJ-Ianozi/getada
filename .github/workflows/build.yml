@@ -39,12 +39,12 @@ jobs:
     
     steps: 
     
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Set up alire
         uses: alire-project/setup-alire@v1
 
-      - name: Checkout
-        uses: actions/checkout@v3
-    
       - name: Build alire
         run: >
          alr -n update &&
@@ -65,12 +65,12 @@ jobs:
     
     steps: 
     
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Set up alire
         uses: alire-project/setup-alire@v1
 
-      - name: Checkout
-        uses: actions/checkout@v3
-    
       - name: Build alire
         run: >
          alr -n update &&
