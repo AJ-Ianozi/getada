@@ -56,8 +56,8 @@ jobs:
       - name: Uploadgetada
         uses: actions/upload-artifact@v2
         with:
-         name: getada-development-win.tar
-         path: getada-development-win.tar
+         name: getada-development-win.zip
+         path: getada-development-win.zip
 
 
   build-macos:
@@ -82,6 +82,6 @@ jobs:
       - name: Uploadgetada
         uses: actions/upload-artifact@v2
         with:
-         name: getada-development-macos.tar
-         path: getada-development-macos.tar
+         name: getada-development-macos.zip
+         path: getada-development-macos.zip
   
