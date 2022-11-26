@@ -51,7 +51,7 @@ jobs:
          alr -n build --release
       
       - name: Compress getada
-        run: zip -r getada-development-win.zip bin
+        run: 7z a -tzip getada-development-win.zip bin
     
       - name: Uploadgetada
         uses: actions/upload-artifact@v2
