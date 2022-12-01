@@ -19,14 +19,17 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 package Options is
 
-   --  This will be set if we detect a version
+   --  Our program options
    type Program_Options is record
-      Version        : Unbounded_String := Null_Unbounded_String;
-      Tmp_Dir        : Unbounded_String := Null_Unbounded_String;
-      Cfg_Dir        : Unbounded_String := Null_Unbounded_String;
-      Bin_Dir        : Unbounded_String := Null_Unbounded_String;
-      Show_Help      : Boolean          := False;
-      No_Update_Path : Boolean          := False;
+      Version         : Unbounded_String := Null_Unbounded_String;
+      Tmp_Dir         : Unbounded_String := Null_Unbounded_String;
+      Cfg_Dir         : Unbounded_String := Null_Unbounded_String;
+      Bin_Dir         : Unbounded_String := Null_Unbounded_String;
+      Show_Help       : Boolean          := False;
+      Uninstall       : Boolean          := False;
+      No_Update_Path  : Boolean          := False;
+      Non_Interactive : Boolean          := False;
+      Quiet           : Boolean          := False;
    end record;
 
    --  Exceptions

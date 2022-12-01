@@ -19,50 +19,32 @@ pragma Assertion_Policy (Check);
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Directories;
 with Options;               use Options;
+with Settings;              use Settings;
+with Defaults;
 package Installer is
-   package Defaults is
-      --  Directories
-      Tmp_Dir : constant String := "/.cache/getada";
-      Cfg_Dir : constant String := "/.getada";
-      Bin_Dir : constant String := "/bin";
-
-      --  Environmental Variables
-      Tmp_Env : constant String := "GETADA_TMP";
-      Cfg_Env : constant String := "GETADA_CFG";
-      Bin_Env : constant String := "GETADA_BIN";
-      Ver_Env : constant String := "GETADA_ALIRE_VERSION";
-
-   end Defaults;
-
-   --  The binary for Alire.
-   Alire : constant String := "alr";
 
    Invalid_Version, Invalid_Download, Invalid_File, No_Environment_Variable,
    OS_Not_Yet_Supported, User_Aborted : exception;
-   type Yes_or_No is (No, Yes, NA);
+
    --  Just to verify we're using theh correct version format.
    subtype Valid_Version is Character with
         Static_Predicate => Valid_Version in 'A' .. 'Z' | 'a' .. 'z' |
             '0' .. '9' | '-' | '.';
 
-   procedure Install (Options : Program_Options) with
+   procedure Install (Our_Settings : Program_Settings) with
       Pre =>
-      (for all I in 1 .. Length (Options.Version) =>
-         Element (Options.Version, I) in Valid_Version
+      (for all I in 1 .. Length (Our_Settings.Version) =>
+         Element (Our_Settings.Version, I) in Valid_Version
          or else raise Invalid_Version
-           with "ERROR: Invalid version: " & To_String (Options.Version));
+           with "ERROR: Invalid version: " & To_String (Our_Settings.Version));
 private
-   function Correct_Path (Home_Dir : String; Path : String) return String;
-   function Get_Answer
-     (Prompt : String; Default_Answer : Yes_or_No := NA) return Yes_or_No;
-   function Get_Answer
-     (Prompt : String; Default_Answer : String := "") return String;
    --  Will add this back in when we have AWS
    --  procedure Download (URL : String; Destination_File : String);
    procedure Download (URL : String);
    procedure Extract_Alire (File : String) with
       Pre => Ada.Directories.Exists (File)
       or else raise Invalid_File with "Unable to load file: " & File,
-      Post => Ada.Directories.Exists ("alr")
-      or else raise Invalid_File with "Unable to find ""alr"" in: " & File;
+      Post => Ada.Directories.Exists (Defaults.Alire)
+      or else raise Invalid_File
+        with "Unable to find """ & Defaults.Alire & """ in: " & File;
 end Installer;
