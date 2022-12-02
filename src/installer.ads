@@ -18,7 +18,6 @@
 pragma Assertion_Policy (Check);
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Directories;
-with Options;               use Options;
 with Settings;              use Settings;
 with Defaults;
 package Installer is

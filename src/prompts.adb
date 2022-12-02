@@ -5,13 +5,16 @@ with Ada.Text_IO;             use Ada.Text_IO;
 package body Prompts is
 
    function Get_Answer
-     (Prompt : String; Default_Answer : Yes_or_No := NA) return Yes_or_No
+     (Prompt        : String; Default_Answer : Answer := DisableDefault;
+      Provided_Text : String := "") return Answer
    is
       Question : constant String :=
         Prompt & " [" &
         (case Default_Answer is when Yes => "Y/n", when No => "y/N",
            when others                   => "y/n") &
-        "]  >";
+        "] " &
+        (if Provided_Text'Length > 0 then " (" & Provided_Text & ")" else "") &
+        " >";
    begin
       loop
          Put (Question);
@@ -19,7 +22,8 @@ package body Prompts is
             Response : constant String :=
               Trim (To_Lower (Get_Line), Ada.Strings.Both);
          begin
-            if Response'Length = 0 and then Default_Answer /= NA then
+            if Response'Length = 0 and then Default_Answer /= DisableDefault
+            then
                return Default_Answer;
             elsif Response = "y" or else Response = "yes" then
                return Yes;
@@ -33,12 +37,14 @@ package body Prompts is
    end Get_Answer;
 
    function Get_Answer
-     (Prompt : String; Default_Answer : String := "") return String
+     (Prompt        : String; Default_Answer : String := "";
+      Provided_Text : String := "") return String
    is
       Question : constant String :=
         Prompt &
         (if Default_Answer'Length > 0 then " [" & Default_Answer & "]"
          else "") &
+        (if Provided_Text'Length > 0 then " (" & Provided_Text & ")" else "") &
         " >";
    begin
       Put (Question);

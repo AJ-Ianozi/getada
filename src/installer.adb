@@ -30,6 +30,7 @@ with JSON.Types;
 
 with Shells;  use Shells;
 with Prompts; use Prompts;
+with Options;
 
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Text_IO;       use Ada.Text_IO;
@@ -109,6 +110,18 @@ package body Installer is
             Put_Line (Item);
          end if;
       end Say_Line;
+      --  Like Say_Line but suppresses if quiet AND non-interactive.
+      procedure Must_Say (Item : String) is
+      begin
+         if not (Our_Settings.Quiet and then Our_Settings.Non_Interactive) then
+            Put_Line (Item);
+         end if;
+      end Must_Say;
+
+      function Say (Item : String) return String is
+      begin
+         return (if not Our_Settings.Quiet then Item else "");
+      end Say;
 
       Home_Dir : constant String := To_String (Our_Settings.Home_Dir);
       Tmp_Dir  : constant String := To_String (Our_Settings.Tmp_Dir);
@@ -128,23 +141,29 @@ package body Installer is
          else (1 => (Null_Unbounded_String, null_shell)));
 
       Settings_Message : constant String :=
+        NL &
         (if Version /= "" then
            "I will attempt to fetch version """ & Version & """"
          else "No version has been specified. Will attempt to install the " &
-           "latest version of Alire." & NL &
-           "(To specify a version, pass --version=x.y.z)") &
+           "latest version of Alire." &
+           Say (NL & "(To specify a version, pass --version=x.y.z)")) &
         NL & "Temporary files will be stored in the following directory: " &
-        NL & Tmp_Dir & NL & NL & "(This can be changed with the """ &
-        Defaults.Tmp_Env & """ " &
-        "environment variable or passing --tmp=/directory/here)" & NL & NL &
-        "Any of alire's scripts or helper files will store in " &
-        "the following location:" & NL & Cfg_Dir & NL & NL &
-        "(This can be changed either by setting the """ & Defaults.Cfg_Env &
-        """ environment variable or passing --cfg=/directory/here)" & NL & NL &
-        "Alire's binary will be installed as """ & Defaults.Alire & """ in " &
-        "the following location:" & NL & Bin_Dir & NL & NL &
-        "(This can be changed either by setting the """ & Defaults.Bin_Env &
-        """ " & "environment variable or passing --bin=/directory/here)" & NL;
+        NL & Tmp_Dir & NL &
+        Say
+          (NL & "(This can be changed with the """ & Defaults.Tmp_Env & """ " &
+           "environment variable or passing --tmp=/directory/here)" & NL) &
+        NL & "Any of alire's scripts or helper files will store in " &
+        "the following location:" & NL & Cfg_Dir & NL &
+        Say
+          (NL & "(This can be changed either by setting the """ &
+           Defaults.Cfg_Env &
+           """ environment variable or passing --cfg=/directory/here)" & NL) &
+        NL & "Alire's binary will be installed as """ & Defaults.Alire &
+        """ in " & "the following location:" & NL & Bin_Dir & NL &
+        Say
+          (NL & "(This can be changed either by setting the """ &
+           Defaults.Bin_Env & """ " &
+           "environment variable or passing --bin=/directory/here)" & NL);
    begin
 
       if Our_Settings.Current_Platform.OS = Windows then
@@ -167,29 +186,81 @@ package body Installer is
               "Should never get here! ";
       end case;
 
-      Say_Line (Settings_Message);
+      Must_Say (Settings_Message);
 
       if not Our_Settings.No_Update_Path then
 
-         Say_Line
+         Must_Say
            ("This path will be added to your local PATH variable by " &
             "modifying the following files:");
 
          for Shell of Our_Shells loop
-            Say_Line (Home_Dir & "/" & To_String (Shell.Config_File));
+            Must_Say (Home_Dir & "/" & To_String (Shell.Config_File));
          end loop;
 
-         Say_Line (NL & "(This can be changed by passing --no-path)" & NL);
+         Must_Say (Say (NL & "(This can be changed by passing --no-path)"));
 
       end if;
-      --  Ask user if they want to install the propgram.
-      if
-        (if Our_Settings.Non_Interactive then Yes
-         else Get_Answer
-             ("Continue with installation?", Default_Answer => Yes)) =
-        No
-      then
-         raise User_Aborted;
+      --  Ask user if they want to install the propgram, or offer interactive
+      if not Our_Settings.Non_Interactive then
+         case Get_Answer
+           (Prompt => "Continue with installation?", Default_Answer => Other,
+            Provided_Text =>
+              "press ""enter"" with no input for interactive mode")
+         is
+            when No =>
+               raise User_Aborted;
+            when Other =>
+               New_Line;
+               Put_Line ("Switching to interactive mode...");
+               New_Line;
+               declare
+                  use Options;
+                  New_Version : constant String :=
+                    Get_Answer
+                      ("Which Version would you like to install?",
+                       Provided_Text => "leave blank for latest version");
+                  New_Tmp_Dir : constant String :=
+                    Get_Answer
+                      ("Where do you want to store temporary files?",
+                       Default_Answer => To_String (Our_Settings.Tmp_Dir));
+                  New_Cfg_Dir : constant String :=
+                    Get_Answer
+                      ("Where do you want the configuration directory?",
+                       Default_Answer => To_String (Our_Settings.Cfg_Dir));
+                  New_Bin_Dir : constant String :=
+                    Get_Answer
+                      ("Where do you want the binary file to go?",
+                       Default_Answer => To_String (Our_Settings.Bin_Dir));
+                  New_Update_Path : constant Answer :=
+                    Get_Answer
+                      ("Add the binary diretory to PATH if it isn't already?",
+                       Default_Answer => Yes);
+                  New_Options : constant Program_Options :=
+                    (Version =>
+                       (if New_Version'Length = 0 then Null_Unbounded_String
+                        else To_Unbounded_String (New_Version)),
+                     Tmp_Dir =>
+                       (if New_Tmp_Dir'Length = 0 then Null_Unbounded_String
+                        else To_Unbounded_String (New_Tmp_Dir)),
+                     Cfg_Dir =>
+                       (if New_Cfg_Dir'Length = 0 then Null_Unbounded_String
+                        else To_Unbounded_String (New_Cfg_Dir)),
+                     Bin_Dir =>
+                       (if New_Bin_Dir'Length = 0 then Null_Unbounded_String
+                        else To_Unbounded_String (New_Bin_Dir)),
+                     No_Update_Path =>
+                       (if New_Update_Path = No then True else False),
+                     others => False);
+                  New_Settings : constant Program_Settings :=
+                    Init_Settings (New_Options);
+               begin
+                  Install (New_Settings);
+                  return;
+               end;
+            when others =>
+               null;
+         end case;
       end if;
       --  Download / extract Alire
       declare
