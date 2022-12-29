@@ -30,6 +30,7 @@ with JSON.Types;
 
 with Shells;  use Shells;
 with Prompts; use Prompts;
+with Logger;  use Logger;
 with Options;
 
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
@@ -140,6 +141,9 @@ package body Installer is
          then Available_Shells (Our_Settings.Current_Platform)
          else (1 => (Null_Unbounded_String, null_shell)));
 
+      --  For logging as we move through.
+      Log : Install_Log_Entry := Init (Our_Settings);
+
       Settings_Message : constant String :=
         NL &
         (if Version /= "" then
@@ -164,6 +168,7 @@ package body Installer is
           (NL & "(This can be changed either by setting the """ &
            Defaults.Bin_Env & """ " &
            "environment variable or passing --bin=/directory/here)" & NL);
+
    begin
 
       if Our_Settings.Current_Platform.OS = Windows then
@@ -357,6 +362,7 @@ package body Installer is
          else
             Say_Line ("Directory " & Tmp_Dir & " detected.");
          end if;
+         Log.Logit (Created_Metadata, Success);
          --  Metadata directory is current working directory.
          Ada.Directories.Set_Directory (Tmp_Dir);
          --  Download the zip if it doesn't already exist.
@@ -369,6 +375,7 @@ package body Installer is
             Say_Line
               ("file " & Save_Path & " already exists, skipping download.");
          end if;
+         Log.Logit (Downloaded, Success, Save_Path);
          --  Create the config and directories if they don't exist.
          if not Ada.Directories.Exists (Cfg_Dir) then
             Say_Line ("Creating Directory: " & Cfg_Dir);
@@ -376,12 +383,14 @@ package body Installer is
          else
             Say_Line ("Directory " & Cfg_Dir & " detected.");
          end if;
+         Log.Logit (Created_Cfg, Success);
          if not Ada.Directories.Exists (Bin_Dir) then
             Say_Line ("Creating Directory: " & Bin_Dir);
             Ada.Directories.Create_Path (Bin_Dir);
          else
             Say_Line ("Directory " & Bin_Dir & " detected.");
          end if;
+         Log.Logit (Created_Bin, Success);
          --  Binary directory is current working directory.
          Ada.Directories.Set_Directory (Bin_Dir);
       --  Check if alr already exists.  If it does, confirm that they want to
@@ -399,6 +408,7 @@ package body Installer is
          end if;
          Say_Line ("Extracting: " & Save_Path & " to " & Bin_Dir);
          Extract_Alire (Save_Path);
+         Log.Logit (Extracted, Success, Save_Path);
       end;
       --  Verify alire is there and executable (we may have to set +x if not)
       declare
@@ -467,6 +477,7 @@ package body Installer is
                exit Test_Alire;
             end if;
          end loop Test_Alire;
+         Log.Logit (Alr_Tested, Success, Alire_Binary);
       end;
       --  At this point alr works, time to add it to path if requested.
       if not Our_Settings.No_Update_Path then
@@ -489,6 +500,7 @@ package body Installer is
                      Create (Env_File, Out_File, Env_Path);
                      Write_Env_File (Config.Shell, Env_File, Bin_Dir);
                      Close (Env_File);
+                     Log.Logit (Created_Env_File, Success, Env_Path);
                   end;
                end if;
             --  If the current profile exists, read through it to check for our
@@ -526,6 +538,9 @@ package body Installer is
                   Say_Line
                     ("If you believe this is an error, please report it.");
                end if;
+               Log.Logit
+                 (Added_Env_File, Success,
+                  Full_Path & Logger.Item_Seperator & Command);
             end Add_Env_To_Config;
 
             Current_Path : constant String :=
@@ -544,6 +559,7 @@ package body Installer is
             end if;
          end;
       end if;
+      Log.Save (Cfg_Dir & Defaults.Log_File);
    exception
       when User_Aborted =>
          Say_Line ("Aborting installation...");

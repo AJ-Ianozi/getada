@@ -102,7 +102,7 @@ package body Options is
                  or else Check_Argument
                    (Options.Version, "-v", "--version=", Arg, I, Skip)
                  or else Check_Argument
-                   (Options.Tmp_Dir, "-m", "--tmp=", Arg, I, Skip)
+                   (Options.Tmp_Dir, "-t", "--tmp=", Arg, I, Skip)
                  or else Check_Argument
                    (Options.Bin_Dir, "-b", "--bin=", Arg, I, Skip)
                  or else Check_Argument
