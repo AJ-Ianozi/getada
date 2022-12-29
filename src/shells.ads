@@ -19,9 +19,9 @@ pragma Assertion_Policy (Check);
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Local_Settings;        use Local_Settings;
 with Ada.Text_IO;           use Ada.Text_IO;
-with Ada.Directories;
+
 package Shells is
-   No_Shell_File     : exception;
+   No_Shells_Found   : exception;
    Unsupported_Shell : exception;
    --  Set the supported shells here.
    type Supported_Shells is
@@ -35,11 +35,7 @@ package Shells is
       Shell       : Supported_Shells;
    end record;
    type Shell_Array is array (Positive range <>) of Shell_Config;
-   function Available_Shells
-     (Current_Platform : Platform) return Shell_Array with
-      Pre => Ada.Directories.Exists ("/etc/shells")
-      or else raise No_Shell_File
-        with "Cannot locate /etc/shells. Please pass ""--no-path""";
+   function Available_Shells (Current_Platform : Platform) return Shell_Array;
    function Get_Shell_Env (Shell_Name : Supported_Shells) return String;
    procedure Write_Env_File
      (Shell_Name : Supported_Shells; File : File_Type; Dir : String);
