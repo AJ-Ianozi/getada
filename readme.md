@@ -27,6 +27,8 @@ Hopefully this can be solved in due time.
 ## How does it work?
 Once downloaded, simply run the application as-is, and it will prompt you to install Alire.  For instructions on how to use it, run `getada --help` or `getada -h`.
 
+If you want to undo everything that GetAda did, simply run `getada --uninstall`.
+
 It will download the latest version of Alire for your platform as a zip file to a metadata directory and then extract it to a binary directory.  By default the metadata directory is `~/.cache/getada`, the config directory is `~/.getada`, and the `alr` binary goes in `~/.getada/bin`.
 
 After extracting, it will then add the binary directory to your path, by creating a `env.sh` file (for sh/zsh/bash; other shells like `fish` are possible in the future) that adds the directory to $PATH if it doesn't already exist.  That file will be sourced in the shell's default env file (e.g. `.profile`).

@@ -17,6 +17,8 @@
 
 with Ada.Strings.Fixed;       use Ada.Strings.Fixed;
 with Ada.Characters.Handling; use Ada.Characters.Handling;
+with Ada.Environment_Variables;
+with Ada.Directories;
 
 package body Shells is
    --  Get the resulting configuration file to edit, based on the shell.
@@ -49,7 +51,7 @@ package body Shells is
       case Shell_Name is
          when sh | bash | zsh =>
             Put_Line (File, "#!/bin/sh");
-            Put_Line (File, "# Add alire's dir to pat\");
+            Put_Line (File, "# Add alire's dir to path");
             Put_Line (File, "case "":$PATH:"" in");
             Put_Line (File, "*"":" & Dir & ":""*)");
             Put_Line (File, "  : ;; # already exists, do nothing.");
@@ -85,14 +87,47 @@ package body Shells is
 
    function Available_Shells (Current_Platform : Platform) return Shell_Array
    is
-      Shell_File : File_Type; -- To store the file
-      Shell_Path : constant String := "/etc/shells"; -- the location
-      Prefix     : constant String := "/bin/"; -- All lines start with this?
+      --  Env variable for current Shell
+      Shell_Env : constant String := "SHELL";
+
+      --  General location of available shells.
+      Shell_Path : constant String := "/etc/shells";
 
       --  Truth table of avalaible shells
       Shell_Amount : Natural := 0; -- Amount of shells discovered
       Shell_List   : array (Supported_Shells'Range) of Boolean :=
         (others => False);
+
+      --  This processes each shell using the established variables above
+      procedure Process_Shell (Shell_Str : String) is
+         Prefix : constant String := "/bin/"; -- All lines start with this?
+      begin
+         --  If this line is /bin/something
+         if Shell_Str'Length > Prefix'Length
+           and then Index (Shell_Str, Prefix) = 1
+         then
+            declare
+               Check_Shell : constant String :=
+                 To_Upper
+                   (Shell_Str
+                      (Shell_Str'First - 1 + Prefix'Length + 1 ..
+                           Shell_Str'Last));
+            begin
+               for S in Shell_List'Range loop
+                  if not Shell_List (S) --  the current item is false
+                    and then S'Image = Check_Shell then
+                     if not Sh_Compatible (S) then
+                        Shell_List (S) := True;
+                        Shell_Amount   := Shell_Amount + 1;
+                     elsif not Shell_List (sh) then
+                        Shell_List (sh) := True;
+                        Shell_Amount    := Shell_Amount + 1;
+                     end if;
+                  end if;
+               end loop;
+            end;
+         end if;
+      end Process_Shell;
    begin
       --  TODO: a better way to do this.
       if Current_Platform.OS = Windows then
@@ -103,38 +138,33 @@ package body Shells is
             return Result;
          end;
       end if;
-      --  get current shells
-      Open (Shell_File, In_File, Shell_Path);
-      --  Iterate through the file, indexing which shells we support.
-      while not End_Of_File (Shell_File) loop
+      --  First log current shell.
+      if Ada.Environment_Variables.Exists (Shell_Env) then
+         Process_Shell (Ada.Environment_Variables.Value (Shell_Env));
+      end if;
+      --  Next, check the available shells
+      if Ada.Directories.Exists (Shell_Path) then
          declare
-            Next_Line : constant String := Get_Line (Shell_File);
+            Shell_File : File_Type; -- To store the file
          begin
-            --  If this line is /bin/something
-            if Next_Line'Length > Prefix'Length
-              and then Index (Next_Line, Prefix) = 1
-            then
+            Open (Shell_File, In_File, Shell_Path);
+            --  Iterate through the file, indexing which shells we support.
+            while not End_Of_File (Shell_File) loop
                declare
-                  Check_Shell : constant String :=
-                    To_Upper (Next_Line (Prefix'Length + 1 .. Next_Line'Last));
+                  Next_Line : constant String := Get_Line (Shell_File);
                begin
-                  for S in Shell_List'Range loop
-                     if not Shell_List (S) --  the current item is false
-                       and then S'Image = Check_Shell then
-                        if not Sh_Compatible (S) then
-                           Shell_List (S) := True;
-                           Shell_Amount   := Shell_Amount + 1;
-                        elsif not Shell_List (sh) then
-                           Shell_List (sh) := True;
-                           Shell_Amount    := Shell_Amount + 1;
-                        end if;
-                     end if;
-                  end loop;
+                  Process_Shell (Next_Line);
                end;
-            end if;
+            end loop;
+            Close (Shell_File);
          end;
-      end loop;
-      Close (Shell_File);
+      end if;
+      --  Verify that we have at least 1 found shell.
+      if Shell_Amount = 0 then
+         raise No_Shells_Found
+           with "Cannot locate /etc/shells or $SHELL does not exist." &
+           " Please pass ""--no-path""";
+      end if;
       --  Create the array, fill it with resulting shells, return the result.
       declare
          Result  : Shell_Array (1 .. Shell_Amount);

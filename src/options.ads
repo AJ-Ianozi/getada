@@ -1,4 +1,4 @@
---    Copyright (C) 2022 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2022-2023 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
@@ -19,20 +19,25 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 package Options is
 
-   --  This will be set if we detect a version
+   --  Our program options
    type Program_Options is record
-      Version        : Unbounded_String := Null_Unbounded_String;
-      Tmp_Dir        : Unbounded_String := Null_Unbounded_String;
-      Cfg_Dir        : Unbounded_String := Null_Unbounded_String;
-      Bin_Dir        : Unbounded_String := Null_Unbounded_String;
-      Show_Help      : Boolean          := False;
-      No_Update_Path : Boolean          := False;
+      Version         : Unbounded_String := Null_Unbounded_String;
+      Tmp_Dir         : Unbounded_String := Null_Unbounded_String;
+      Cfg_Dir         : Unbounded_String := Null_Unbounded_String;
+      Bin_Dir         : Unbounded_String := Null_Unbounded_String;
+      Show_Help       : Boolean          := False;
+      Show_Version    : Boolean          := False;
+      Uninstall       : Boolean          := False;
+      No_Update_Path  : Boolean          := False;
+      Non_Interactive : Boolean          := False;
+      Quiet           : Boolean          := False;
    end record;
 
    --  Exceptions
    Invalid_Argument : exception;
    Unknown_Argument : exception;
 
+   --  Processes the arguments based on the command line perams
    function Process_Arguments return Program_Options;
 private
    function Check_Argument

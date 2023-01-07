@@ -1,4 +1,4 @@
---    Copyright (C) 2022 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2022-2023 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
@@ -91,15 +91,20 @@ package body Options is
             declare
                Arg : constant String := Argument (I);
             begin
-               if Check_Argument
-                   (Options.Show_Help, "-h", "--help", Arg)
+               if Check_Argument (Options.Show_Help, "-h", "--help", Arg)
                  or else Check_Argument
                    (Options.No_Update_Path, "-p", "--no-path", Arg)
                  or else Check_Argument
+                    (Options.Show_Version, "-s", "--show-version", Arg)
+                 or else Check_Argument
+                   (Options.Non_Interactive, "-n", "--non-interactive", Arg)
+                 or else Check_Argument (Options.Quiet, "-q", "--quiet", Arg)
+                 or else Check_Argument
+                   (Options.Uninstall, "-u", "--uninstall", Arg)
+                 or else Check_Argument
                    (Options.Version, "-v", "--version=", Arg, I, Skip)
                  or else Check_Argument
-                   (Options.Tmp_Dir, "-m", "--meta=", Arg,
-                    I, Skip)
+                   (Options.Tmp_Dir, "-t", "--tmp=", Arg, I, Skip)
                  or else Check_Argument
                    (Options.Bin_Dir, "-b", "--bin=", Arg, I, Skip)
                  or else Check_Argument
@@ -115,6 +120,7 @@ package body Options is
             Skip := False;
          end if;
       end loop;
+
       return Options;
    end Process_Arguments;
 end Options;

@@ -1,4 +1,4 @@
---    Copyright (C) 2022 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2022-2023 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
@@ -28,29 +28,21 @@ with GNAT.OS_Lib;
 with JSON.Parsers;
 with JSON.Types;
 
-with Shells; use Shells;
-
-with Ada.Characters.Latin_1;  use Ada.Characters.Latin_1;
-with Ada.Characters.Handling; use Ada.Characters.Handling;
+with Console_IO;  use Console_IO;
+with Shells;      use Shells;
+with Prompts;     use Prompts;
+with Logger;      use Logger;
+with Files;       use Files;
+with Uninstaller; use Uninstaller;
+with Options;
 
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Text_IO;       use Ada.Text_IO;
-
-with Ada.Environment_Variables;
 
 with Zip;
 with UnZip;
 
 package body Installer is
-   function Correct_Path (Home_Dir : String; Path : String) return String is
-      Corrected_Path : constant String :=
-        (if Path (Path'First) = '~' then
-           Home_Dir & "/" &
-           (if Path'Length > 1 then Path (Path'First + 1 .. Path'Last) else "")
-         else Path);
-   begin
-      return Ada.Directories.Full_Name (Corrected_Path);
-   end Correct_Path;
 
 --  This will be used once alire's AWS supports https.
 --  For the moment: just using curl.
@@ -103,7 +95,11 @@ package body Installer is
       --  then this will break.
       --  Also this won't work on Windows :)
       if Exists (Zip_File, "bin/alr") then
-         Extract (from => File, what => "bin/alr", rename => Alire);
+         Extract (from => File, what => "bin/alr", rename => Defaults.Alire);
+      elsif Exists (Zip_File, "bin/alr.exe") then
+         Extract
+           (from   => File, what => "bin/alr",
+            rename => Defaults.Alire & ".exe");
       else
          raise Invalid_File
            with "Archive does not contain bin/alr." &
@@ -111,153 +107,76 @@ package body Installer is
       end if;
    end Extract_Alire;
 
-   function Get_Answer
-     (Prompt : String; Default_Answer : Yes_or_No := NA) return Yes_or_No
-   is
-      Question : constant String :=
-        Prompt & " [" &
-        (case Default_Answer is when Yes => "Y/n", when No => "y/N",
-           when others                   => "y/n") &
-        "]  >";
-   begin
-      loop
-         Put (Question);
-         declare
-            Response : constant String :=
-              Trim (To_Lower (Get_Line), Ada.Strings.Both);
-         begin
-            if Response'Length = 0 and then Default_Answer /= NA then
-               return Default_Answer;
-            elsif Response = "y" or else Response = "yes" then
-               return Yes;
-            elsif Response = "n" or else Response = "no" then
-               return No;
-            else
-               Put_Line ("Invalid response.");
-            end if;
-         end;
-      end loop;
-   end Get_Answer;
+   procedure Install (Our_Settings : Program_Settings) is
+      --  For easier newlines.
+      NL : constant String := Defaults.NL;
 
-   function Get_Answer
-     (Prompt : String; Default_Answer : String := "") return String
-   is
-      Question : constant String :=
-        Prompt &
-        (if Default_Answer'Length > 0 then " [" & Default_Answer & "]"
-         else "") &
-        " >";
-   begin
-      Put (Question);
-      declare
-         Response : constant String :=
-           Trim (To_Lower (Get_Line), Ada.Strings.Both);
-      begin
-         if Response'Length = 0 and then Default_Answer'Length > 0 then
-            return Default_Answer;
-         else
-            return Response;
-         end if;
-      end;
-   end Get_Answer;
+      IO : constant C_IO := Init (Our_Settings);
 
-   procedure Install (Options : Program_Options) is
-      Current_Platform : constant Platform := Local_Settings.Init_Platform;
-
-      --  On windows it's "HOMEPATH", but unix is "HOME".
-      Home_Env : constant String :=
-        (case Current_Platform.OS is when Windows => "HOMEPATH",
-           when others                            => "HOME");
-
-      Home_Dir : constant String :=
-        (if Ada.Environment_Variables.Exists (Home_Env) then
-           Ada.Environment_Variables.Value (Home_Env)
-         else raise No_Environment_Variable
-             with "Cannot find the $HOME environment variable. " &
-             "No home directory can be found.");
-
-      Version : constant String :=
-        (if Options.Version /= Null_Unbounded_String then
-           To_String (Options.Version)
-         elsif Ada.Environment_Variables.Exists (Defaults.Ver_Env) then
-           Ada.Environment_Variables.Value (Defaults.Ver_Env)
-         else "");
-
-      Tmp_Dir : constant String :=
-        Correct_Path
-          (Home_Dir,
-           (if Options.Tmp_Dir /= Null_Unbounded_String then
-              To_String (Options.Tmp_Dir)
-            else
-              (if Ada.Environment_Variables.Exists (Defaults.Tmp_Env) then
-                 Ada.Environment_Variables.Value (Defaults.Tmp_Env)
-               else Home_Dir & Defaults.Tmp_Dir)));
-
-      --  TODO: Need to decide on a location...
-      --  since alire uses ~/.config/alire for everything maybe
-      --  we have ~/.config/getada/env.sh instead of ~/.getada/env.sh ?
-      Cfg_Dir : constant String :=
-        Correct_Path
-          (Home_Dir,
-           (if Options.Cfg_Dir /= Null_Unbounded_String then
-              To_String (Options.Cfg_Dir)
-            else
-              (if Ada.Environment_Variables.Exists (Defaults.Cfg_Env) then
-                 Ada.Environment_Variables.Value (Defaults.Cfg_Env)
-               else Home_Dir & Defaults.Cfg_Dir)));
+      Home_Dir : constant String := To_String (Our_Settings.Home_Dir);
+      Tmp_Dir  : constant String := To_String (Our_Settings.Tmp_Dir);
+      Cfg_Dir  : constant String := To_String (Our_Settings.Cfg_Dir);
       --  TODO: Put this in Program Files on Windows +
       --       and Home_Dir/Applications/bin on MacOS?
       --       do something like:
       --       Local_Apps: constant String := Local_Settings.App_Dir;
-      Bin_Dir : constant String :=
-        Correct_Path
-          (Home_Dir,
-           (if Options.Bin_Dir /= Null_Unbounded_String then
-              To_String (Options.Bin_Dir)
-            else
-              (if Ada.Environment_Variables.Exists (Defaults.Bin_Env) then
-                 Ada.Environment_Variables.Value (Defaults.Bin_Env)
-               else Cfg_Dir & Defaults.Bin_Dir)));
+      Bin_Dir : constant String := To_String (Our_Settings.Bin_Dir);
+      Version : constant String := To_String (Our_Settings.Version);
+
+      --  The final resting place of the alire binary.
+      Alire_Binary : constant String :=
+        Bin_Dir & "/" & Defaults.Alire &
+        (if Our_Settings.Current_Platform.OS = Windows then ".exe" else "");
 
       Our_Shells : constant Shell_Array :=
-        (if not Options.No_Update_Path then Available_Shells (Current_Platform)
+        (if
+           not Our_Settings.No_Update_Path
+           and then Our_Settings.Current_Platform.OS /= Windows
+         then Available_Shells (Our_Settings.Current_Platform)
          else (1 => (Null_Unbounded_String, null_shell)));
+
+      --  For logging as we move through.
+      Log : Install_Log := Init (Our_Settings);
+
       Settings_Message : constant String :=
+        NL &
         (if Version /= "" then
            "I will attempt to fetch version """ & Version & """"
          else "No version has been specified. Will attempt to install the " &
-           "latest version of Alire." & CR & LF &
-           "(To specify a version, pass --version=x.y.z)")
-        & CR & LF &
-        "Temporary files will be stored in the following directory: "
-        & CR & LF & Tmp_Dir & CR & LF & CR & LF &
-        "(This can be changed with the """ & Defaults.Tmp_Env & """ " &
-        "environment variable or passing --meta=/directory/here)" & CR & LF
-        & CR & LF & "Any of alire's scripts or helper files will store in " &
-        "the following location:"
-        & CR & LF & Cfg_Dir & CR & LF & CR & LF &
-        "(This can be changed either by setting the """ & Defaults.Cfg_Env &
-        """ environment variable or passing --cfg=/directory/here)"
-        & CR & LF & CR & LF &
-        "Alire's binary will be installed as """ & Alire & """ in the " &
-        "following location:" & CR & LF & Bin_Dir & CR & LF & CR & LF &
-        "(This can be changed either by setting the """ & Defaults.Bin_Env
-        & """ " & "environment variable or passing --bin=/directory/here)"
-        & CR & LF;
+           "latest version of Alire." &
+           IO.Say (NL & "(To specify a version, pass --version=x.y.z)")) &
+        NL & "Temporary files will be stored in the following directory: " &
+        NL & Tmp_Dir & NL &
+        IO.Say
+          (NL & "(This can be changed with the """ & Defaults.Tmp_Env & """ " &
+           "environment variable or passing --tmp=/directory/here)" & NL) &
+        NL & "Any of alire's scripts or helper files will store in " &
+        "the following location:" & NL & Cfg_Dir & NL &
+        IO.Say
+          (NL & "(This can be changed either by setting the """ &
+           Defaults.Cfg_Env &
+           """ environment variable or passing --cfg=/directory/here)" & NL) &
+        NL & "Alire's binary will be installed as """ & Defaults.Alire &
+        """ in " & "the following location:" & NL & Bin_Dir & NL &
+        IO.Say
+          (NL & "(This can be changed either by setting the """ &
+           Defaults.Bin_Env & """ " &
+           "environment variable or passing --bin=/directory/here)" & NL);
+
    begin
 
-      if Current_Platform.OS = Windows then
+      if Our_Settings.Current_Platform.OS = Windows then
          raise OS_Not_Yet_Supported
-           with CR & LF & "----------------------------------------" &
-           "----------------------------------------" & CR & LF &
-           "NOTE: Windows installation is not ready yet!" & CR & LF &
+           with NL & "----------------------------------------" &
+           "----------------------------------------" & NL &
+           "NOTE: Windows installation is not ready yet!" & NL &
            " I recommend using alire's installer on https://alire.ada.dev/" &
-           CR & LF & "----------------------------------------" &
+           NL & "----------------------------------------" &
            "----------------------------------------";
       end if;
 
       --  TODO: Add unix type for linux/macos/freebsd/etc --
-      case Current_Platform.OS is
+      case Our_Settings.Current_Platform.OS is
          when MacOS | Linux =>
             null;
          when others =>
@@ -266,26 +185,84 @@ package body Installer is
               "Should never get here! ";
       end case;
 
-      Put_Line (Settings_Message);
+      IO.Must_Say (Settings_Message);
 
-      if not Options.No_Update_Path then
+      if not Our_Settings.No_Update_Path then
 
-         Put_Line
+         IO.Must_Say
            ("This path will be added to your local PATH variable by " &
             "modifying the following files:");
 
-         for I in Our_Shells'Range loop
-            Put_Line (Home_Dir & "/" & To_String (Our_Shells (I).Config_File));
+         for Shell of Our_Shells loop
+            IO.Must_Say (Home_Dir & "/" & To_String (Shell.Config_File));
          end loop;
 
-         Put_Line
-           (CR & LF & "(This can be changed by passing --no-path)" & CR & LF);
+         IO.Must_Say ("(This can be changed by passing --no-path)" & NL);
+
+         IO.Must_Say ("You can revert everything that was done by re-running" &
+                      " GetAda with the --uninstall option." & NL);
 
       end if;
-      --  Ask user if they want to install the propgram.
-      if Get_Answer ("Continue with installation?", Default_Answer => Yes) = No
-      then
-         raise User_Aborted;
+      --  Ask user if they want to install the propgram, or offer interactive
+      if not Our_Settings.Non_Interactive then
+         case Get_Answer
+           (Prompt => "Continue with installation?", Default_Answer => Other,
+            Provided_Text =>
+              "press ""enter"" with no input for interactive mode")
+         is
+            when No =>
+               raise User_Aborted;
+            when Other =>
+               New_Line;
+               Put_Line ("Switching to interactive mode...");
+               New_Line;
+               declare
+                  use Options;
+                  New_Version : constant String :=
+                    Get_Answer
+                      ("Which Version would you like to install?",
+                       Provided_Text => "leave blank for latest version");
+                  New_Tmp_Dir : constant String :=
+                    Get_Answer
+                      ("Where do you want to store temporary files?",
+                       Default_Answer => To_String (Our_Settings.Tmp_Dir));
+                  New_Cfg_Dir : constant String :=
+                    Get_Answer
+                      ("Where do you want the configuration directory?",
+                       Default_Answer => To_String (Our_Settings.Cfg_Dir));
+                  New_Bin_Dir : constant String :=
+                    Get_Answer
+                      ("Where do you want the binary file to go?",
+                       Default_Answer => To_String (Our_Settings.Bin_Dir));
+                  New_Update_Path : constant Answer :=
+                    Get_Answer
+                      ("Add the binary diretory to PATH if it isn't already?",
+                       Default_Answer => Yes);
+                  New_Options : constant Program_Options :=
+                    (Version =>
+                       (if New_Version'Length = 0 then Null_Unbounded_String
+                        else To_Unbounded_String (New_Version)),
+                     Tmp_Dir =>
+                       (if New_Tmp_Dir'Length = 0 then Null_Unbounded_String
+                        else To_Unbounded_String (New_Tmp_Dir)),
+                     Cfg_Dir =>
+                       (if New_Cfg_Dir'Length = 0 then Null_Unbounded_String
+                        else To_Unbounded_String (New_Cfg_Dir)),
+                     Bin_Dir =>
+                       (if New_Bin_Dir'Length = 0 then Null_Unbounded_String
+                        else To_Unbounded_String (New_Bin_Dir)),
+                     No_Update_Path =>
+                       (if New_Update_Path = No then True else False),
+                     others => False);
+                  New_Settings : constant Program_Settings :=
+                    Init_Settings (New_Options);
+               begin
+                  Install (New_Settings);
+                  return;
+               end;
+            when others =>
+               null;
+         end case;
       end if;
       --  Download / extract Alire
       declare
@@ -305,8 +282,8 @@ package body Installer is
             --  Decide whether we're getting latest or e.g /tags/v1.2.3
             URL : constant String :=
               Alire_Base_API &
-              (if Length (Options.Version) > 0 then
-                 "/tags/v" & To_String (Options.Version)
+              (if Length (Our_Settings.Version) > 0 then
+                 "/tags/v" & To_String (Our_Settings.Version)
                else "/latest");
 
             --  Result : AWS.Response.Data;
@@ -322,7 +299,7 @@ package body Installer is
                 (Command => Cmd, Arguments => Args, Input => "",
                  Status  => Status'Access);
             Suffex : constant String :=
-              (case Current_Platform.OS is
+              (case Our_Settings.Current_Platform.OS is
                  when MacOS   => "bin-x86_64-macos.zip",
                  when Linux   => "bin-x86_64-linux.zip",
                  when Windows => "bin-x86_64-windows.zip");
@@ -365,7 +342,7 @@ package body Installer is
             end if;
             raise Invalid_Version
               with "Unable to find alire download of version: " &
-              To_String (Options.Version);
+              To_String (Our_Settings.Version);
          end Download_URL;
          --  Fetch the download URL for Alire from github.
          URL : constant String := Download_URL;
@@ -377,74 +354,81 @@ package body Installer is
       begin
          --  Create the metadata directory if it doesn't alerady exist.
          if not Ada.Directories.Exists (Tmp_Dir) then
-            Put_Line ("Creating Directory: " & Tmp_Dir);
+            IO.Say_Line ("Creating Directory: " & Tmp_Dir);
             Ada.Directories.Create_Path (Tmp_Dir);
          else
-            Put_Line ("Directory " & Tmp_Dir & " detected.");
+            IO.Say_Line ("Directory " & Tmp_Dir & " detected.");
          end if;
+         Log.Logit (Created_Metadata, Success);
          --  Metadata directory is current working directory.
          Ada.Directories.Set_Directory (Tmp_Dir);
          --  Download the zip if it doesn't already exist.
          if not Ada.Directories.Exists (Save_Path) then
-            Put_Line ("Downloading " & URL & " to " & Save_Path);
+            IO.Say_Line ("Downloading " & URL & " to " & Save_Path);
             --  Will add this back in once we have AWS
             --  Download (URL, Save_Path);
             Download (URL);
          else
-            Put_Line
+            IO.Say_Line
               ("file " & Save_Path & " already exists, skipping download.");
          end if;
+         Log.Logit (Downloaded, Success, Save_Path);
          --  Create the config and directories if they don't exist.
          if not Ada.Directories.Exists (Cfg_Dir) then
-            Put_Line ("Creating Directory: " & Cfg_Dir);
+            IO.Say_Line ("Creating Directory: " & Cfg_Dir);
             Ada.Directories.Create_Path (Cfg_Dir);
          else
-            Put_Line ("Directory " & Cfg_Dir & " detected.");
+            IO.Say_Line ("Directory " & Cfg_Dir & " detected.");
          end if;
+         Log.Logit (Created_Cfg, Success);
          if not Ada.Directories.Exists (Bin_Dir) then
-            Put_Line ("Creating Directory: " & Bin_Dir);
+            IO.Say_Line ("Creating Directory: " & Bin_Dir);
             Ada.Directories.Create_Path (Bin_Dir);
          else
-            Put_Line ("Directory " & Bin_Dir & " detected.");
+            IO.Say_Line ("Directory " & Bin_Dir & " detected.");
          end if;
+         Log.Logit (Created_Bin, Success);
          --  Binary directory is current working directory.
          Ada.Directories.Set_Directory (Bin_Dir);
       --  Check if alr already exists.  If it does, confirm that they want to
          --   overwrite it.
-         if Ada.Directories.Exists (Bin_Dir & "/" & Alire)
+         if Ada.Directories.Exists (Bin_Dir & "/" & Defaults.Alire)
            and then
-             Get_Answer
-               ("The following file already exists:" & Bin_Dir &
-                "/" & Alire & " ... Replace it?",
-                Default_Answer => Yes) =
+             (if Our_Settings.Non_Interactive then Yes
+              else Get_Answer
+                  ("The following file already exists:" & Bin_Dir & "/" &
+                   Defaults.Alire & " ... Replace it?",
+                   Default_Answer => Yes)) =
              No
          then
             raise User_Aborted;
          end if;
-         Put_Line ("Extracting: " & Save_Path & " to " & Bin_Dir);
+         IO.Say_Line ("Extracting: " & Save_Path & " to " & Bin_Dir);
          Extract_Alire (Save_Path);
+         Log.Logit (Extracted, Success, Alire_Binary);
       end;
       --  Verify alire is there and executable (we may have to set +x if not)
       declare
          type Checks is (Chmod, Macos_xattr);
          Tested : array (Checks'Range) of Boolean :=
            (Macos_xattr =>
-              (if Current_Platform.OS = MacOS then False else True),
+              (if Our_Settings.Current_Platform.OS = MacOS then False
+               else True),
             others => False);
          Successfully_Executed : Boolean;
-         Alire_Binary          : constant String := Bin_Dir & "/" & Alire;
-         Alire_Args            : constant GNAT.OS_Lib.Argument_List (1 .. 1) :=
+
+         Alire_Args : constant GNAT.OS_Lib.Argument_List (1 .. 1) :=
            (1 => new String'("--version"));
       begin
          Test_Alire :
          loop
-            Put_Line
+            IO.Say_Line
               ("Testing Alire by running """ & Alire_Binary & " --version""");
             GNAT.OS_Lib.Spawn
               (Program_Name => Alire_Binary, Args => Alire_Args,
                Success      => Successfully_Executed);
             if not Successfully_Executed then
-               Put_Line
+               IO.Say_Line
                  ("Unable to run binary... Attempting to troubleshoot.");
                if not Tested (Chmod) then
                   declare
@@ -456,7 +440,7 @@ package body Installer is
                   begin
                      --  TODO: Handle if they don't have chmod
                      --    or if it's not stored at /bin/chmod
-                     Put_Line
+                     IO.Say_Line
                        ("Attempting ""/bin/chmod +x " & Alire_Binary & """");
                      GNAT.OS_Lib.Spawn
                        (Program_Name => "/bin/chmod", Args => Chmod_Args,
@@ -472,7 +456,7 @@ package body Installer is
                         2 => new String'("com.apple.quarantine"),
                         3 => new String'(Alire_Binary));
                   begin
-                     Put_Line
+                     IO.Say_Line
                        ("Attempting ""/usr/bin/xattr -d " &
                         "com.apple.quarantine " & Alire_Binary & """");
                      GNAT.OS_Lib.Spawn
@@ -486,13 +470,14 @@ package body Installer is
                     " is not a valid executible by this system.";
                end if;
             else
-               Put_Line ("Sucessfully able to run binary.");
+               IO.Say_Line ("Sucessfully able to run binary.");
                exit Test_Alire;
             end if;
          end loop Test_Alire;
+         Log.Logit (Alr_Tested, Success, Alire_Binary);
       end;
       --  At this point alr works, time to add it to path if requested.
-      if not Options.No_Update_Path then
+      if not Our_Settings.No_Update_Path then
          declare
             procedure Add_Env_To_Config (Config : Shell_Config) is
                Full_Path : constant String :=
@@ -502,7 +487,6 @@ package body Installer is
                  Cfg_Dir & "/" & Get_Shell_Env (Config.Shell);
                Command : constant String :=
                  Get_Env_Command (Config.Shell, Env_Path);
-               No_Source_In_Env : Boolean := True;
             begin
                --  If the env for this shell does not exist
                if not Ada.Directories.Exists (Env_Path) then
@@ -512,66 +496,62 @@ package body Installer is
                      Create (Env_File, Out_File, Env_Path);
                      Write_Env_File (Config.Shell, Env_File, Bin_Dir);
                      Close (Env_File);
+                     Log.Logit (Created_Env_File, Success, Env_Path);
                   end;
                end if;
             --  If the current profile exists, read through it to check for our
             --  command to add.
-               if Ada.Directories.Exists (Full_Path) then
-                  Open (Shell_File, In_File, Full_Path);
-                  --  Iterate through the file, looking for a PATH export.
-                  Check_File :
-                  while not End_Of_File (Shell_File) loop
-                     declare
-                        Next_Line : constant String := Get_Line (Shell_File);
-                     begin
-                        if Index (Next_Line, Command) > 0 then
-                           --  Contains our env file
-                           No_Source_In_Env := False;
-                           exit Check_File;
-                        end if;
-                     end;
-                  end loop Check_File;
-                  Close (Shell_File);
-               end if;
-               if No_Source_In_Env then
+               if not Line_Exists (Full_Path, Command) then
                   --  Open or amend the file
                   if Ada.Directories.Exists (Full_Path) then
                      Open (Shell_File, Append_File, Full_Path);
                   else
                      Create (Shell_File, Out_File, Full_Path);
                   end if;
-                  Put_Line ("Adding '" & Command & "' to " & Full_Path);
-                  Put_Line (Shell_File, "# Added by getada");
+                  IO.Say_Line ("Adding '" & Command & "' to " & Full_Path);
                   Put_Line (Shell_File, Command);
                   Close (Shell_File);
                else
-                  Put_Line ("Env source already detected in " & Full_Path);
-                  Put_Line
+                  IO.Say_Line ("Env source already detected in " & Full_Path);
+                  IO.Say_Line
                     ("If you believe this is an error, please report it.");
                end if;
+               Log.Logit
+                 (Added_Env_File, Success,
+                  Full_Path & Logger.Item_Seperator & Command);
             end Add_Env_To_Config;
 
             Current_Path : constant String :=
-              (if Ada.Environment_Variables.Exists ("PATH") then
-                 Ada.Environment_Variables.Value ("PATH")
-               else "");
+              To_String (Our_Settings.Path_Env);
          begin
-            for I in Our_Shells'Range loop
-               Add_Env_To_Config (Our_Shells (I));
+            for Shell of Our_Shells loop
+               Add_Env_To_Config (Shell);
             end loop;
             if Index (":" & Bin_Dir & ":", ":" & Current_Path & ":") = 0 then
-               Put_Line
+               IO.Say_Line
                  (Bin_Dir &
                   " not detected in Path.  You may need to reinitate " &
                   "your session.");
             else
-               Put_Line (Bin_Dir & " already detected in $PATH.");
+               IO.Say_Line (Bin_Dir & " already detected in $PATH.");
             end if;
          end;
       end if;
+      Log.Save (Cfg_Dir & Defaults.Log_File);
    exception
-      when User_Aborted =>
-         Put_Line ("Aborting installation...");
+      when User_Aborted | OS_Not_Yet_Supported =>
+         raise;
+      when others =>
+         IO.Must_Say ("Something went wrong... Aborting installation...");
+         IO.Must_Say
+           ("Attempting to save log in HOME directory:" & Home_Dir &
+            Defaults.Log_File);
+         Log.Save (Home_Dir & Defaults.Log_File);
+         IO.Must_Say ("Attempting to roll back to state before installer ran");
+         --  Uninstall what was done so far.
+         Uninstall (Log, Our_Settings, Never_Prompt => True);
+         IO.Must_Say ("If filing a bug report, please attach the log.");
+         raise;
    end Install;
 
 end Installer;
