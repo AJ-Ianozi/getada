@@ -16,7 +16,6 @@
 --    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 with Ada.Streams.Stream_IO; use Ada.Streams.Stream_IO;
-with Ada.Text_IO;
 package body Logger is
    function Init (Our_Settings : Program_Settings) return Install_Log is
       Result : constant Install_Log :=
@@ -102,15 +101,15 @@ package body Logger is
    begin
       Open (Log_File, In_File, File_Name);
       Stream_Ptr := Stream (Log_File);
-      -- First read in the current settings
+      --  First read in the current settings
       Program_Settings'Read (Stream_Ptr, Log.Current_Settings);
       --  Next, read the recent stage.
       Unbounded_String'Read (Stream_Ptr, Cur_Stage);
       --  And set it.
       Log.Recent_Stage := Stage'Value (To_String (Cur_Stage));
-      -- Next, the array size
+      --  Next, the array size
       Natural'Read (Stream_Ptr, Cur_Array_Size);
-      -- And load it in.
+      --  And load it in.
       declare
          Tmp_Stage : Stage;
       begin

@@ -19,10 +19,13 @@ with Settings; use Settings;
 
 package Console_IO is
    type C_IO is tagged private;
+   --  Initiate the console IO
    function Init (Our_Settings : Program_Settings) return C_IO;
+
+   --  Prints the line if 
    procedure Say_Line (This : C_IO; Item : String);
-   procedure Must_Say (This : C_IO; Item : String);
    function Say (This : C_IO; Item : String) return String;
+   procedure Must_Say (This : C_IO; Item : String);
 private
    type C_IO is tagged record
       Quiet           : Boolean;

@@ -18,7 +18,7 @@
 with Ada.Text_IO; use Ada.Text_IO;
 package body Console_IO is
    function Init (Our_Settings : Program_Settings) return C_IO is
-      Result : C_IO :=
+      Result : constant C_IO :=
         (Quiet           => Our_Settings.Quiet,
          Non_Interactive => Our_Settings.Non_Interactive);
    begin

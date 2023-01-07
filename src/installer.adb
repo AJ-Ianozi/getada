@@ -485,7 +485,6 @@ package body Installer is
                  Cfg_Dir & "/" & Get_Shell_Env (Config.Shell);
                Command : constant String :=
                  Get_Env_Command (Config.Shell, Env_Path);
-               No_Source_In_Env : Boolean := True;
             begin
                --  If the env for this shell does not exist
                if not Ada.Directories.Exists (Env_Path) then
