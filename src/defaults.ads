@@ -1,9 +1,9 @@
 with Ada.Characters.Latin_1;
 package Defaults is
    --  Directories, starting at $HOME
-   Tmp_Dir : constant String := "/.cache/getada"; --  Temporary files to remove
-   Cfg_Dir : constant String := "/.getada";       --  Config, scripts, bin, etc
-   Bin_Dir : constant String := "/bin";           --  Located in Cfg_Dir
+   Tmp_Dir  : constant String := "/.cache/getada"; --  Temporary files
+   Cfg_Dir  : constant String := "/.getada";       --  Config, scripts, bin
+   Bin_Dir  : constant String := "/bin";           --  Located in Cfg_Dir
    Log_File : constant String := "/log.dat";       --  Located in Cfg_Dir
 
    --  Environmental Variables
@@ -26,8 +26,7 @@ package Defaults is
      "Copyright (C) 2022 A.J. Ianozi licensed GPL3.";
 
    Help_Message : constant String :=
-     "Options: " & NL &
-     "-h --help: Print this message and exit." & NL &
+     "Options: " & NL & "-h --help: Print this message and exit." & NL &
      "-p --no-path: Don't update path." & NL &
      "-n --non-interactive: Suppress prompts; answer with defaults." & NL &
      "-q --quiet: Be quiet (does not suppress propmts)" & NL &
@@ -36,10 +35,12 @@ package Defaults is
      "-b /directory --bin=/directory: Set binary directory " & NL &
      "-v x.y.z --version=x.y.z: Download a specific version." & NL &
      "-u --uninstall: Uninstall Alire. This only works if Alire was" & NL &
-     "                installed in a default directory or --cfg is passed." &
-     NL & "You can also set the version and metadata / binary directory by " &
-     NL & "setting the following environment variables:" & NL & " * """ &
-     Ver_Env & """  for Alire's version" & NL & " * """ & Tmp_Env &
+     "                installed with GetAda.  Works out of the box if" & NL &
+     "                default directory was used, otherwise you must" & NL &
+     "                pass --cfg= so the uninstaller can find the log." & NL &
+     "You can also set the version and tmp/cfg/binary directories by " & NL &
+     "setting the following environment variables:" & NL & " * """ & Ver_Env &
+     """  for Alire's version" & NL & " * """ & Tmp_Env &
      """ for metadata directory" & NL & " * """ & Cfg_Env &
      """ for config directory" & NL & " * """ & Bin_Env &
      """ for binary directory" & NL & "That's it for right now!";
