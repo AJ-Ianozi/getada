@@ -1,4 +1,4 @@
---    Copyright (C) 2022 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2022-2023 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
@@ -24,7 +24,7 @@ package Installer is
 
    Invalid_Version, Invalid_Download, Invalid_File, No_Environment_Variable,
    OS_Not_Yet_Supported, User_Aborted : exception;
-
+   
    --  Just to verify we're using theh correct version format.
    subtype Valid_Version is Character with
         Static_Predicate => Valid_Version in 'A' .. 'Z' | 'a' .. 'z' |

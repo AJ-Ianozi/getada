@@ -1,4 +1,4 @@
---    Copyright (C) 2022 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2022-2023 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
@@ -38,20 +38,22 @@ begin
    if Options.Show_Help then
       --  Just show the help message and exit. -q won't count.
       Put_Line (Defaults.Help_Message);
-      return;
+   elsif Options.Show_Version Then
+      --  Just show the version and exit.  -q won't count.
+      Put_Line(Defaults.Getada_Version);
+   else
+      declare
+         Settings : constant Program_Settings := Init_Settings (Options);
+      begin
+         if Options.Uninstall then
+            --  Start our uninstaller.
+            Uninstall (Settings);
+         else
+            --  Start our installer.
+            Install (Settings);
+         end if;
+      end;
    end if;
-
-   declare
-      Settings : constant Program_Settings := Init_Settings (Options);
-   begin
-      if Options.Uninstall then
-         --  Start our uninstaller.
-         Uninstall (Settings);
-      else
-         --  Start our installer.
-         Install (Settings);
-      end if;
-   end;
 exception
    when Installer.User_Aborted =>
       Put_Line ("Aborted... Closing program.");

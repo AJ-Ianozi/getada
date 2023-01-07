@@ -1,4 +1,4 @@
---    Copyright (C) 2022 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2022-2023 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
@@ -17,6 +17,9 @@
 
 with Ada.Characters.Latin_1;
 package Defaults is
+   --  About GetAda
+   Getada_Version : constant String := "0.2.0-dev"; --  Must match alire.toml
+
    --  Directories, starting at $HOME
    Tmp_Dir  : constant String := "/.cache/getada"; --  Temporary files
    Cfg_Dir  : constant String := "/.getada";       --  Config, scripts, bin
@@ -37,20 +40,22 @@ package Defaults is
      Ada.Characters.Latin_1.CR & Ada.Characters.Latin_1.LF;
 
    Welcome_Message : constant String :=
-     "Welcome to the unofficial Alire Installer (""GetAda"")!" & NL &
+     "Welcome to the unofficial Alire Installer (""GetAda"") v" &
+     Getada_Version & "!" & NL &
      "Alire is the official Ada Package Manager. For more information" & NL &
      "please visit https://ada-lang.io or https://alire.ada.dev" & NL &
-     "Copyright (C) 2022 A.J. Ianozi licensed GPL3.";
+     "Copyright (C) 2022-2023 A.J. Ianozi licensed GPL3.";
 
    Help_Message : constant String :=
      "Options: " & NL & "-h --help: Print this message and exit." & NL &
+     "-s --show-version: Print the version of this binary and exit." & NL &
      "-p --no-path: Don't update path." & NL &
      "-n --non-interactive: Suppress prompts; answer with defaults." & NL &
      "-q --quiet: Be quiet (does not suppress propmts)" & NL &
      "-t /directory --tmp=/directory: Set tmp/metadata " & NL &
      "-c /directory --cfg=/directory: Set config directory " & NL &
      "-b /directory --bin=/directory: Set binary directory " & NL &
-     "-v x.y.z --version=x.y.z: Download a specific version." & NL &
+     "-v x.y.z --version=x.y.z: Download a specific version of alire." & NL &
      "-u --uninstall: Uninstall Alire. This only works if Alire was" & NL &
      "                installed with GetAda.  Works out of the box if" & NL &
      "                default directory was used, otherwise you must" & NL &

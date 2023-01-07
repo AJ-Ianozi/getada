@@ -1,4 +1,4 @@
---    Copyright (C) 2022 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2022-2023 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
@@ -26,6 +26,7 @@ package Options is
       Cfg_Dir         : Unbounded_String := Null_Unbounded_String;
       Bin_Dir         : Unbounded_String := Null_Unbounded_String;
       Show_Help       : Boolean          := False;
+      Show_Version    : Boolean          := False;
       Uninstall       : Boolean          := False;
       No_Update_Path  : Boolean          := False;
       Non_Interactive : Boolean          := False;
