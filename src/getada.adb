@@ -18,6 +18,7 @@
 pragma Assertion_Policy (Check);
 with Defaults;
 with Installer;   use Installer;
+with Uninstaller; use Uninstaller;
 with Options;     use Options;
 with Settings;    use Settings;
 with Ada.Text_IO; use Ada.Text_IO;
@@ -45,12 +46,13 @@ begin
    begin
       if Options.Uninstall then
          --  Start our uninstaller.
-         --  Uninstall (Settings);
-         null;
+         Uninstall (Settings);
       else
          --  Start our installer.
          Install (Settings);
       end if;
    end;
-
+exception
+   when Installer.User_Aborted =>
+      Put_Line ("Aborted... Closing program.");
 end Getada;

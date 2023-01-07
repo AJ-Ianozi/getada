@@ -1,3 +1,21 @@
+--    Copyright (C) 2022 A.J. Ianozi <aj@ianozi.com>
+--
+--    This file is part of GetAda: the Unofficial Alire Installer
+--
+--    This program is free software: you can redistribute it and/or modify
+--    it under the terms of the GNU General Public License as published by
+--    the Free Software Foundation, either version 3 of the License, or
+--    (at your option) any later version.
+--
+--    This program is distributed in the hope that it will be useful,
+--    but WITHOUT ANY WARRANTY; without even the implied warranty of
+--    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--    GNU General Public License for more details.
+--
+--    You should have received a copy of the GNU General Public License
+--    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+pragma Assertion_Policy (Check);
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Directories;
 
@@ -25,27 +43,33 @@ package Logger is
    type Statuses is (Failed, Success, NA);
 
    --  The logger structure itself.
-   type Install_Log_Entry is tagged private;
+   type Install_Log is tagged private;
 
-   function Init
-     (Our_Settings : Program_Settings)
-      return Install_Log_Entry;
+   function Init (Our_Settings : Program_Settings) return Install_Log;
 
-   function Load (File_Name : String) return Install_Log_Entry with
+   function Load (File_Name : String) return Install_Log with
       Pre => Ada.Directories.Exists (File_Name)
       or else raise Invalid_File with "File not found: " & File_Name;
 
-   procedure Save (Log       : Install_Log_Entry;
-                   File_Name : String) with
+   procedure Save (Log : Install_Log; File_Name : String) with
       Post => Ada.Directories.Exists (File_Name)
       or else raise Invalid_File with "Unable to create file " & File_Name;
 
-   --  Logs the data in the actual log structure
+      --  Logs the data in the actual log structure
    procedure Logit
-     (Log            : in out Install_Log_Entry;
-      Current_Stage  :        Stage;
-      Current_Status :        Statuses;
-      Current_Data   :        String   := "");
+     (Log            : in out Install_Log; Current_Stage : Stage;
+      Current_Status :        Statuses; Current_Data : String := "");
+
+   --  Retrives the latest stage this log got to.
+   function Get_Recent_Stage (Log : Install_Log) return Stage;
+
+   --  Retrives the status of a log entry of x stage.
+   function Get_Status (Log : Install_Log; Of_Stage : Stage) return Statuses;
+
+   --  Retrives the data.
+   function Get_Data (Log : Install_Log; Of_Stage : Stage) return String;
+
+   function Get_Settings (Log : Install_Log) return Program_Settings;
 private
 
    --  The individual step.
@@ -56,7 +80,7 @@ private
    type Step_Array is array (Stage'Range) of Step;
 
    --  The logger structure itself.
-   type Install_Log_Entry is tagged record
+   type Install_Log is tagged record
       Current_Settings : Program_Settings; --  Settings used to install
       Recent_Stage     : Stage;            --  The furthest stage it got to
       Steps            : Step_Array;       --  Each step of process

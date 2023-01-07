@@ -41,7 +41,6 @@ package Shells is
      (Shell_Name : Supported_Shells; File : File_Type; Dir : String);
    function Get_Env_Command
      (Shell_Name : Supported_Shells; Env_File : String) return String;
-
 private
    --  Gets the config file for each shell.
    function Get_Shell_Config (Shell_Name : Supported_Shells) return String;

@@ -15,18 +15,8 @@
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package Prompts is
-   type Answer is
-     (No, --  Answer is "No"
-      Yes, --  Answer is "Yes"
-      Other,  --  "other" - useful for providing 3rd option
-      DisableDefault);
-
-   function Get_Answer
-     (Prompt        : String; Default_Answer : Answer := DisableDefault;
-      Provided_Text : String := "") return Answer;
-
-   function Get_Answer
-     (Prompt        : String; Default_Answer : String := "";
-      Provided_Text : String := "") return String;
-end Prompts;
+package Files is
+   --  Returns if a line exists in a given file.  If the file doesn't exist,
+   --  it will return False.
+   function Line_Exists (Full_Path : String; Line : String) return Boolean;
+end Files;

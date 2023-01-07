@@ -15,18 +15,23 @@
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package Prompts is
-   type Answer is
-     (No, --  Answer is "No"
-      Yes, --  Answer is "Yes"
-      Other,  --  "other" - useful for providing 3rd option
-      DisableDefault);
+pragma Assertion_Policy (Check);
+with Settings; use Settings;
+with Logger;   use Logger;
+package Uninstaller is
+   No_Log_Found : exception;
+   Invalid_Log  : exception;
+   User_Aborted : exception;
+   --  Starts uninstaller for getada+alire based on provided settings.
+   procedure Uninstall (Our_Settings : Program_Settings);
 
-   function Get_Answer
-     (Prompt        : String; Default_Answer : Answer := DisableDefault;
-      Provided_Text : String := "") return Answer;
-
-   function Get_Answer
-     (Prompt        : String; Default_Answer : String := "";
-      Provided_Text : String := "") return String;
-end Prompts;
+   --  Starts uninstaller for getada+alire, potentially with prompts.
+   procedure Uninstall
+     (Log          : Install_Log; Our_Settings : Program_Settings;
+      Never_Prompt : Boolean := False);
+private
+   --  Uninstalls getada+alire.
+   procedure Process_Uninstall
+     (Log     : Install_Log; Our_Settings : Program_Settings;
+      Pretend : Boolean := False);
+end Uninstaller;

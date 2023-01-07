@@ -15,18 +15,18 @@
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package Prompts is
-   type Answer is
-     (No, --  Answer is "No"
-      Yes, --  Answer is "Yes"
-      Other,  --  "other" - useful for providing 3rd option
-      DisableDefault);
+with Settings; use Settings;
 
-   function Get_Answer
-     (Prompt        : String; Default_Answer : Answer := DisableDefault;
-      Provided_Text : String := "") return Answer;
+package Console_IO is
+   type C_IO is tagged private;
+   function Init (Our_Settings : Program_Settings) return C_IO;
+   procedure Say_Line (This : C_IO; Item : String);
+   procedure Must_Say (This : C_IO; Item : String);
+   function Say (This : C_IO; Item : String) return String;
+private
+   type C_IO is tagged record
+      Quiet           : Boolean;
+      Non_Interactive : Boolean;
+   end record;
 
-   function Get_Answer
-     (Prompt        : String; Default_Answer : String := "";
-      Provided_Text : String := "") return String;
-end Prompts;
+end Console_IO;
