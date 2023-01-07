@@ -197,8 +197,10 @@ package body Installer is
             IO.Must_Say (Home_Dir & "/" & To_String (Shell.Config_File));
          end loop;
 
-         IO.Must_Say
-           (IO.Say (NL & "(This can be changed by passing --no-path)"));
+         IO.Must_Say ("(This can be changed by passing --no-path)" & NL);
+
+         IO.Must_Say ("You can revert everything that was done by re-running" &
+                      " GetAda with the --uninstall option." & NL);
 
       end if;
       --  Ask user if they want to install the propgram, or offer interactive
