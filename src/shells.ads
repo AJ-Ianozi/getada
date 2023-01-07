@@ -23,22 +23,33 @@ with Ada.Text_IO;           use Ada.Text_IO;
 package Shells is
    No_Shells_Found   : exception;
    Unsupported_Shell : exception;
+
    --  Set the supported shells here.
    type Supported_Shells is
      (null_shell,
       sh,
       bash, --  bash will use sh's .profile
       zsh);
+
    --  This is for returning a list of path files.
    type Shell_Config is record
       Config_File : Unbounded_String;
       Shell       : Supported_Shells;
    end record;
+
    type Shell_Array is array (Positive range <>) of Shell_Config;
+
+   --  Returns the shells available for a given platform.
    function Available_Shells (Current_Platform : Platform) return Shell_Array;
+
+   --  Returns the env file for that shell. For example, .profile for sh.
    function Get_Shell_Env (Shell_Name : Supported_Shells) return String;
+
+   --  Writes the getada script to a file based on shell type.
    procedure Write_Env_File
      (Shell_Name : Supported_Shells; File : File_Type; Dir : String);
+
+   --  Gets the command to run the env file. E.g. ". <Env_File>" for sh.
    function Get_Env_Command
      (Shell_Name : Supported_Shells; Env_File : String) return String;
 private

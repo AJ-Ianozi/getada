@@ -45,17 +45,20 @@ package Logger is
    --  The logger structure itself.
    type Install_Log is tagged private;
 
+   --  Initiates the logger structure.
    function Init (Our_Settings : Program_Settings) return Install_Log;
 
+   --  Loads the logger from a file
    function Load (File_Name : String) return Install_Log with
       Pre => Ada.Directories.Exists (File_Name)
       or else raise Invalid_File with "File not found: " & File_Name;
 
+   --  Saves the logger to a file
    procedure Save (Log : Install_Log; File_Name : String) with
       Post => Ada.Directories.Exists (File_Name)
       or else raise Invalid_File with "Unable to create file " & File_Name;
 
-      --  Logs the data in the actual log structure
+   --  Logs the data in the actual log structure
    procedure Logit
      (Log            : in out Install_Log; Current_Stage : Stage;
       Current_Status :        Statuses; Current_Data : String := "");
@@ -69,6 +72,7 @@ package Logger is
    --  Retrives the data.
    function Get_Data (Log : Install_Log; Of_Stage : Stage) return String;
 
+   --  Retrives the settings from the log
    function Get_Settings (Log : Install_Log) return Program_Settings;
 private
 

@@ -22,10 +22,12 @@ package Prompts is
       Other,  --  "other" - useful for providing 3rd option
       DisableDefault);
 
+   --  Prompts a yes or no question, with optional default.
    function Get_Answer
      (Prompt        : String; Default_Answer : Answer := DisableDefault;
       Provided_Text : String := "") return Answer;
 
+   --  Prompts a question and accepts a string, with optional default answer.
    function Get_Answer
      (Prompt        : String; Default_Answer : String := "";
       Provided_Text : String := "") return String;

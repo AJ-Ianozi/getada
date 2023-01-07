@@ -36,6 +36,7 @@ package Options is
    Invalid_Argument : exception;
    Unknown_Argument : exception;
 
+   --  Processes the arguments based on the command line perams
    function Process_Arguments return Program_Options;
 private
    function Check_Argument
