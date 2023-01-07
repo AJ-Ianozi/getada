@@ -24,7 +24,7 @@ package body Files is
       File_To_Check : File_Type;
       Result        : Boolean := False;
    begin
-      if Ada.Directories.Exists (Full_Path) then
+      if Exists (Full_Path) then
          Open (File_To_Check, In_File, Full_Path);
          --  Iterate through the file, looking for a PATH export.
          Check_File :
