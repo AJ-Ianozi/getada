@@ -1,10 +1,31 @@
 #!/bin/sh
 # shellcheck shell=dash
 # shellcheck disable=SC2039  # local is non-POSIX
+#
+#    Copyright (C)  2016 The Rust Project Developers
+#    Copyright (C)  2024 A.J. Ianozi <aj@ianozi.com>
+#
+#    This file is part of Getada-Download: A script to install GetAda
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
 
 # This is just a little script that can be downloaded from the internet to
-# install rustup. It just does platform detection, downloads the installer
+# install GetAda. It just does platform detection, downloads the installer
 # and runs it.
+# Adapted from rustup's script at https://github.com/rust-lang/rustup which is
+# why references to Rust may be in some variables.
 
 # It runs on Unix shells like {a,ba,da,k,z}sh. It uses the common `local`
 # extension. Note: Most shells limit `local` to 1 var per line, contra bash.
@@ -29,40 +50,35 @@ set -u
 # If RUSTUP_UPDATE_ROOT is unset or empty, default it.
 RUSTUP_UPDATE_ROOT="${RUSTUP_UPDATE_ROOT:-https://static.rust-lang.org/rustup}"
 
-# NOTICE: If you change anything here, please make the same changes in setup_mode.rs
+# NOTICE: If you change anything here, please make the same changes in defaults.ads and options.adb
 usage() {
     cat <<EOF
-rustup-init 1.26.0 (577bf51ae 2023-04-05)
-
-The installer for rustup
-
-Usage: rustup-init[EXE] [OPTIONS]
+Welcome to the unofficial Alire Installer (""GetAda"") v0.2.0
+Alire is the official Ada Package Manager. For more information
+please visit https://ada-lang.io or https://alire.ada.dev
+Copyright (C) 2022-2023 A.J. Ianozi licensed GPL3.
 
 Options:
-  -v, --verbose
-          Enable verbose output
-  -q, --quiet
-          Disable progress output
-  -y
-          Disable confirmation prompt.
-      --default-host <default-host>
-          Choose a default host triple
-      --default-toolchain <default-toolchain>
-          Choose a default toolchain to install. Use 'none' to not install any toolchains at all
-      --profile <profile>
-          [default: default] [possible values: minimal, default, complete]
-  -c, --component <components>...
-          Component name to also install
-  -t, --target <targets>...
-          Target name to also install
-      --no-update-default-toolchain
-          Don't update any existing default toolchain after install
-      --no-modify-path
-          Don't configure the PATH environment variable
-  -h, --help
-          Print help
-  -V, --version
-          Print version
+-h --help: Print this message and exit.
+-s --show-version: Print the version of this binary and exit.
+-p --no-path: Don't update path.
+-n --non-interactive: Suppress prompts; answer with defaults.
+-q --quiet: Be quiet (does not suppress propmts)
+-t /directory --tmp=/directory: Set tmp/metadata
+-c /directory --cfg=/directory: Set config directory
+-b /directory --bin=/directory: Set binary directory
+-v x.y.z --version=x.y.z: Download a specific version of alire.
+-u --uninstall: Uninstall Alire. This only works if Alire was
+                installed with GetAda.  Works out of the box if
+                default directory was used, otherwise you must
+                pass --cfg= so the uninstaller can find the log.
+You can also set the version and tmp/cfg/binary directories by
+setting the following environment variables:
+* GETADA_ALIRE_VERSION for Alire's version
+* GETADA_TMP for metadata directory
+* GETADA_CFG for config directory
+* GETADA_BIN for binary directory
+That's it for right now!
 EOF
 }
 
@@ -122,13 +138,13 @@ main() {
                     # don't attempt to interpret it.
                     continue
                 fi
-                while getopts :hy sub_arg "$arg"; do
+                while getopts :hn sub_arg "$arg"; do
                     case "$sub_arg" in
                         h)
                             usage
                             exit 0
                             ;;
-                        y)
+                        n)
                             # user wants to skip the prompt --
                             # we don't need /dev/tty
                             need_tty=no
@@ -147,12 +163,16 @@ main() {
         printf '%s\n' 'info: downloading installer' 1>&2
     fi
 
+# Just print the url, file, and arch, then exit.  Don't do anything else.
+echo "$_url" "$_file" "$_arch"
+exit 1
+
     ensure mkdir -p "$_dir"
     ensure downloader "$_url" "$_file" "$_arch"
     ensure chmod u+x "$_file"
     if [ ! -x "$_file" ]; then
         printf '%s\n' "Cannot execute $_file (likely because of mounting /tmp as noexec)." 1>&2
-        printf '%s\n' "Please copy the file to a location where you can execute binaries and run ./rustup-init${_ext}." 1>&2
+        printf '%s\n' "Please copy the file to a location where you can execute binaries and run ./getada${_ext}." 1>&2
         exit 1
     fi
 
@@ -162,7 +182,7 @@ main() {
         # doesn't have stdin to pass to its children. Instead we're going
         # to explicitly connect /dev/tty to the installer's stdin.
         if [ ! -t 1 ]; then
-            err "Unable to run interactively. Run with -y to accept defaults, --help for additional options"
+            err "Unable to run interactively. Run with -n to accept defaults, --help for additional options"
         fi
 
         ignore "$_file" "$@" < /dev/tty
@@ -360,7 +380,8 @@ get_architecture() {
     case "$_ostype" in
 
         Android)
-            _ostype=linux-android
+            err "Android not yet supported"
+            #  _ostype=linux-android
             ;;
 
         Linux)
@@ -374,10 +395,12 @@ get_architecture() {
             ;;
 
         NetBSD)
+            err "Netbesd not yet supported"
             _ostype=unknown-netbsd
             ;;
 
         DragonFly)
+            err "Dragonfly not yet supported"
             _ostype=unknown-dragonfly
             ;;
 
@@ -386,10 +409,12 @@ get_architecture() {
             ;;
 
         illumos)
+            err "Illumos not yet supported"
             _ostype=unknown-illumos
             ;;
 
         MINGW* | MSYS* | CYGWIN* | Windows_NT)
+            err "Please download the Windows installer on alire.ada.dev"
             _ostype=pc-windows-gnu
             ;;
 
@@ -481,15 +506,15 @@ get_architecture() {
     if [ "${_ostype}" = unknown-linux-gnu ] && [ "${_bitness}" -eq 32 ]; then
         case $_cputype in
             x86_64)
-                if [ -n "${RUSTUP_CPUTYPE:-}" ]; then
-                    _cputype="$RUSTUP_CPUTYPE"
+                if [ -n "${GETADA_CPUTYPE:-}" ]; then
+                    _cputype="$GETADA_CPUTYPE"
                 else {
                     # 32-bit executable for amd64 = x32
                     if is_host_amd64_elf; then {
                          echo "This host is running an x32 userland; as it stands, x32 support is poor," 1>&2
                          echo "and there isn't a native toolchain -- you will have to install" 1>&2
                          echo "multiarch compatibility with i686 and/or amd64, then select one" 1>&2
-                         echo "by re-running this script with the RUSTUP_CPUTYPE environment variable" 1>&2
+                         echo "by re-running this script with the GETADA_CPUTYPE environment variable" 1>&2
                          echo "set to i686 or x86_64, respectively." 1>&2
                          echo 1>&2
                          echo "You will be able to add an x32 target after installation by running" 1>&2
@@ -501,15 +526,18 @@ get_architecture() {
                 }; fi
                 ;;
             mips64)
-                _cputype=$(get_endianness mips '' el)
+                err "mips unsupported"
+                #  _cputype=$(get_endianness mips '' el)
                 ;;
             powerpc64)
-                _cputype=powerpc
+                err "powerpc unsupported"
+                #  _cputype=powerpc
                 ;;
             aarch64)
                 _cputype=armv7
                 if [ "$_ostype" = "linux-android" ]; then
-                    _ostype=linux-androideabi
+                    err "Android not yet supported"
+                    #  _ostype=linux-androideabi
                 else
                     _ostype="${_ostype}eabihf"
                 fi
