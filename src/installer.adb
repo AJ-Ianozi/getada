@@ -1,4 +1,4 @@
---    Copyright (C) 2022-2023 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2022-2024 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
@@ -21,7 +21,6 @@
 --    with AWS.Response;
 --    with AWS.Resources;
 --    with Ada.Streams.Stream_IO;
-with Local_Settings; use Local_Settings;
 with GNAT.Expect;    use GNAT.Expect;
 with GNAT.OS_Lib;
 --  Required for reading the json versions and getting the download URL.
@@ -34,6 +33,8 @@ with Prompts;     use Prompts;
 with Logger;      use Logger;
 with Files;       use Files;
 with Uninstaller; use Uninstaller;
+with Platform;    use Platform;
+with Commands;    use Commands;
 with Options;
 
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
@@ -41,6 +42,9 @@ with Ada.Text_IO;       use Ada.Text_IO;
 
 with Zip;
 with UnZip;
+
+--  For random string generator
+with Ada.Numerics.Discrete_Random;
 
 package body Installer is
 
@@ -51,10 +55,17 @@ package body Installer is
 --      use Ada.Streams;
 --      Result : constant Response.Data := Client.Get(URL => URL);
    procedure Download (URL : String) is
-      Cmd  : constant String                             := "curl";
-      Args : constant GNAT.OS_Lib.Argument_List (1 .. 4) :=
-        (1 => new String'("-O"), 2 => new String'("-J"),
-         3 => new String'("-L"), 4 => new String'(URL));
+      Cmd  : constant String := "curl";
+               --(if Available_Command (curl) then "curl"
+               -- elsif Available_Command (wget) then "wget"
+               -- else raise Missing_Dependency);
+      Arg : constant String := "-OJL";
+               --(if Available_Command (curl) then "-OJL"
+               -- elsif Available_Command (wget) then "-q"
+               -- else raise Missing_Dependency);
+      Args : constant GNAT.OS_Lib.Argument_List (1 .. 2) :=
+         (1 => new String'(Arg),
+          2 => new String'(URL));
       Status   : aliased Integer := 0;
       Response : constant String :=
         Get_Command_Output
@@ -85,6 +96,27 @@ package body Installer is
 --      end if;
       null;
    end Download;
+
+   --  Creates a random string.
+   function Random_String (Str_Len : Natural) return String is
+      Alpha_Num : constant array (1 .. 62) of Character :=
+         ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
+          'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+          's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
+          'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+          'U', 'V', 'W', 'X', 'Y', 'Z');
+      subtype Alpha_Range is Integer range 1 .. 62;
+      package Rand_Gen is new Ada.Numerics.Discrete_Random (Alpha_Range);
+      use Rand_Gen;
+      Gen : Generator;
+   begin
+      Reset (Gen);
+      return Result : String (1 .. Str_Len) do
+         for I in 1 .. Str_Len loop
+            Result (I) := Alpha_Num (Random (Gen));
+         end loop;
+      end return;
+   end Random_String;
 
    procedure Extract_Alire (File : String) is
       use Zip, UnZip;
@@ -126,13 +158,11 @@ package body Installer is
       --  The final resting place of the alire binary.
       Alire_Binary : constant String :=
         Bin_Dir & "/" & Defaults.Alire &
-        (if Our_Settings.Current_Platform.OS = Windows then ".exe" else "");
+        (if Platform.OS = Windows then ".exe" else "");
 
       Our_Shells : constant Shell_Array :=
-        (if
-           not Our_Settings.No_Update_Path
-           and then Our_Settings.Current_Platform.OS /= Windows
-         then Available_Shells (Our_Settings.Current_Platform)
+        (if not Our_Settings.No_Update_Path then
+            Available_Shells
          else (1 => (Null_Unbounded_String, null_shell)));
 
       --  For logging as we move through.
@@ -145,7 +175,7 @@ package body Installer is
          else "No version has been specified. Will attempt to install the " &
            "latest version of Alire." &
            IO.Say (NL & "(To specify a version, pass --version=x.y.z)")) &
-        NL & "Temporary files will be stored in the following directory: " &
+        NL & "Temporary files will be stored in a folder in: " &
         NL & Tmp_Dir & NL &
         IO.Say
           (NL & "(This can be changed with the """ & Defaults.Tmp_Env & """ " &
@@ -165,7 +195,7 @@ package body Installer is
 
    begin
 
-      if Our_Settings.Current_Platform.OS = Windows then
+      if OS = Windows then
          raise OS_Not_Yet_Supported
            with NL & "----------------------------------------" &
            "----------------------------------------" & NL &
@@ -176,7 +206,7 @@ package body Installer is
       end if;
 
       --  TODO: Add unix type for linux/macos/freebsd/etc --
-      case Our_Settings.Current_Platform.OS is
+      case OS is
          when MacOS | Linux =>
             null;
          when others =>
@@ -184,6 +214,16 @@ package body Installer is
               with "The current OS is not yet supported. " &
               "Should never get here! ";
       end case;
+
+      if False then --not Available_Command (curl) and then Available_Command (wget) then 
+         raise Missing_Dependency
+           with NL & "----------------------------------------" &
+           "----------------------------------------" & NL &
+           "You must have curl or wget to use GetAda." & NL &
+           " Please at least install curl and then re-run." &
+           NL & "----------------------------------------" &
+           "----------------------------------------";
+      end if;
 
       IO.Must_Say (Settings_Message);
 
@@ -289,19 +329,27 @@ package body Installer is
             --  Result : AWS.Response.Data;
             --  Result := AWS.Client.Get(URL => URL);
 
-            --  just use `curl -s URL` :D
-            Cmd  : constant String                             := "curl";
+            --  just use `curl -s URL` or wget :D
+            Cmd  : constant String := "curl";
+               --(if Available_Command (curl) then "curl"
+               -- elsif Available_Command (wget) then "wget"
+               -- else raise Missing_Dependency);
+            Arg : constant String := "-q";
+               --(if Available_Command (curl) then "-q"
+               -- elsif Available_Command (wget) then "-qO-"
+               -- else raise Missing_Dependency);
             Args : constant GNAT.OS_Lib.Argument_List (1 .. 2) :=
-              (1 => new String'("-s"), 2 => new String'(URL));
+              (1 => new String'(Arg), 2 => new String'(URL));
             Status   : aliased Integer := 0;
             Response : constant String :=
               Get_Command_Output
                 (Command => Cmd, Arguments => Args, Input => "",
                  Status  => Status'Access);
             Suffex : constant String :=
-              (case Our_Settings.Current_Platform.OS is
+              (case OS is
                  when MacOS   => "bin-x86_64-macos.zip",
                  when Linux   => "bin-x86_64-linux.zip",
+                 when FreeBSD => "", -- coming soon
                  when Windows => "bin-x86_64-windows.zip");
             --  the json parser stuff
             package Types is new JSON.Types (Long_Integer, Long_Float);
@@ -344,24 +392,53 @@ package body Installer is
               with "Unable to find alire download of version: " &
               To_String (Our_Settings.Version);
          end Download_URL;
+
+         --  Creates a temporary directory in Tmp_Dir directory
+         --  It will try 1000 times.
+         --  Raises an exception if unable to create directory.
+         function Unique_Dir return String is
+         begin
+            if not Ada.Directories.Exists (Tmp_Dir) then
+               raise Invalid_File with Tmp_Dir & " does not exist!";
+            end if;
+            loop
+               for I in 1 .. 1000 loop
+                  declare
+                     New_Directory : constant String :=
+                        Ada.Directories.Full_Name
+                           (Tmp_Dir & "/" & "tmp." & Random_String (16));
+                  begin
+                     if not Ada.Directories.Exists (New_Directory) then
+                        Ada.Directories.Create_Path (New_Directory);
+                        return New_Directory;
+                     end if;
+                  end;
+               end loop;
+               if
+                  Our_Settings.Non_Interactive or else
+                  Get_Answer ("Cannot create unique folder in " & Tmp_Dir &
+                              "... Keep searching?", Default_Answer => Yes) =
+                  No
+               then
+                  raise Invalid_File with
+                     "Unable to find unique dir in " & Tmp_Dir;
+               end if;
+            end loop;
+         end Unique_Dir;
+
          --  Fetch the download URL for Alire from github.
          URL : constant String := Download_URL;
          --  This contains the full .zip name based on the download URL.
          File_Name : constant String :=
            URL ((Index (URL, "/", Ada.Strings.Backward) + 1) .. URL'Last);
          --  This is the full path to save the file.
-         Save_Path : constant String := Tmp_Dir & "/" & File_Name;
+         Tmp_Path  : constant String := Unique_Dir;
+         Save_Path : constant String := Tmp_Path & "/" & File_Name;
       begin
-         --  Create the metadata directory if it doesn't alerady exist.
-         if not Ada.Directories.Exists (Tmp_Dir) then
-            IO.Say_Line ("Creating Directory: " & Tmp_Dir);
-            Ada.Directories.Create_Path (Tmp_Dir);
-         else
-            IO.Say_Line ("Directory " & Tmp_Dir & " detected.");
-         end if;
+         --  Create the metadata directory.
          Log.Logit (Created_Metadata, Success);
          --  Metadata directory is current working directory.
-         Ada.Directories.Set_Directory (Tmp_Dir);
+         Ada.Directories.Set_Directory (Tmp_Path);
          --  Download the zip if it doesn't already exist.
          if not Ada.Directories.Exists (Save_Path) then
             IO.Say_Line ("Downloading " & URL & " to " & Save_Path);
@@ -411,23 +488,15 @@ package body Installer is
       declare
          type Checks is (Chmod, Macos_xattr);
          Tested : array (Checks'Range) of Boolean :=
-           (Macos_xattr =>
-              (if Our_Settings.Current_Platform.OS = MacOS then False
-               else True),
+           (Macos_xattr => (if OS = MacOS then False else True),
             others => False);
-         Successfully_Executed : Boolean;
 
-         Alire_Args : constant GNAT.OS_Lib.Argument_List (1 .. 1) :=
-           (1 => new String'("--version"));
       begin
          Test_Alire :
          loop
             IO.Say_Line
               ("Testing Alire by running """ & Alire_Binary & " --version""");
-            GNAT.OS_Lib.Spawn
-              (Program_Name => Alire_Binary, Args => Alire_Args,
-               Success      => Successfully_Executed);
-            if not Successfully_Executed then
+            if not Test_Command (Alire_Binary) then
                IO.Say_Line
                  ("Unable to run binary... Attempting to troubleshoot.");
                if not Tested (Chmod) then

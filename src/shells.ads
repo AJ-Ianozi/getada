@@ -1,4 +1,4 @@
---    Copyright (C) 2022 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2022-2024 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
@@ -17,7 +17,6 @@
 
 pragma Assertion_Policy (Check);
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Local_Settings;        use Local_Settings;
 with Ada.Text_IO;           use Ada.Text_IO;
 
 package Shells is
@@ -40,7 +39,7 @@ package Shells is
    type Shell_Array is array (Positive range <>) of Shell_Config;
 
    --  Returns the shells available for a given platform.
-   function Available_Shells (Current_Platform : Platform) return Shell_Array;
+   function Available_Shells return Shell_Array;
 
    --  Returns the env file for that shell. For example, .profile for sh.
    function Get_Shell_Env (Shell_Name : Supported_Shells) return String;

@@ -1,4 +1,4 @@
---    Copyright (C) 2022 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2024 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
@@ -15,23 +15,10 @@
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
---  Local settings specific to this platform.
-package Local_Settings is
-   --  Potential Operating Systems
-   type OSs is (Linux, Windows, MacOS);
-   --  Archs: Can add to this as more are supported.
-   type Archs is
-     (x86,     --  i386/i686
-      x86_64,  --  64-bit x86-64
-      aarch64, --  64-bit arm, e.g. Apple and rasperry pi
-      armv7l); --  32-bit arm
-   type Platform is record
-      OS   : OSs;
-      Arch : Archs;
-   end record;
+with Local_OS;
+with Local_Arch;
 
-   function Init_Platform return Platform;
-private
-   function OS return OSs;
-   function Arch return Archs;
-end Local_Settings;
+package body Platform is
+   function OS return OSs is (Local_OS.OS_Type);
+   function Arch return Archs is (Local_Arch.Arch_Type);
+end Platform;

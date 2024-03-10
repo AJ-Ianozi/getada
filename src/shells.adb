@@ -1,4 +1,4 @@
---    Copyright (C) 2022 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2022-2024 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
@@ -17,6 +17,7 @@
 
 with Ada.Strings.Fixed;       use Ada.Strings.Fixed;
 with Ada.Characters.Handling; use Ada.Characters.Handling;
+with Platform;                use Platform;
 with Ada.Environment_Variables;
 with Ada.Directories;
 
@@ -85,7 +86,7 @@ package body Shells is
       end case;
    end Sh_Compatible;
 
-   function Available_Shells (Current_Platform : Platform) return Shell_Array
+   function Available_Shells return Shell_Array
    is
       --  Env variable for current Shell
       Shell_Env : constant String := "SHELL";
@@ -115,7 +116,8 @@ package body Shells is
             begin
                for S in Shell_List'Range loop
                   if not Shell_List (S) --  the current item is false
-                    and then S'Image = Check_Shell then
+                    and then S'Image = Check_Shell
+                  then
                      if not Sh_Compatible (S) then
                         Shell_List (S) := True;
                         Shell_Amount   := Shell_Amount + 1;
@@ -130,7 +132,7 @@ package body Shells is
       end Process_Shell;
    begin
       --  TODO: a better way to do this.
-      if Current_Platform.OS = Windows then
+      if OS = Windows then
          declare
             Result : constant Shell_Array (1 .. 1) :=
               (1 => (Null_Unbounded_String, null_shell));

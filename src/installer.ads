@@ -1,4 +1,4 @@
---    Copyright (C) 2022-2023 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2022-2024 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
@@ -23,7 +23,7 @@ with Defaults;
 package Installer is
 
    Invalid_Version, Invalid_Download, Invalid_File, No_Environment_Variable,
-   OS_Not_Yet_Supported, User_Aborted : exception;
+   OS_Not_Yet_Supported, User_Aborted, Missing_Dependency : exception;
 
    --  Just to verify we're using theh correct version format.
    subtype Valid_Version is Character with
@@ -40,6 +40,8 @@ private
    --  Will add this back in when we have AWS
    --  procedure Download (URL : String; Destination_File : String);
    procedure Download (URL : String);
+   --  Generate a random string of size Str_Len
+   function Random_String (Str_Len : Natural) return String;
    procedure Extract_Alire (File : String) with
       Pre => Ada.Directories.Exists (File)
       or else raise Invalid_File with "Unable to load file: " & File,
