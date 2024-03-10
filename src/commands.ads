@@ -24,7 +24,6 @@ package Commands is
    --  Available_Command (curl) = True if curl is supported.
    --  Truth table
    type Command_Supported is array (Possible_Commands'Range) of Boolean;
-   --  Generates available-commands
+   --  Generated commands supported function
    function Test_Commands return Command_Supported;
-private
 end Commands;

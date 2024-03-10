@@ -60,8 +60,4 @@ package body Commands is
          end loop;
       end return;
    end Test_Commands;
-
-   function Available_Command (Cmd : Possible_Commands) return Boolean is
-      (Supported_Commands (Cmd));
-
 end Commands;

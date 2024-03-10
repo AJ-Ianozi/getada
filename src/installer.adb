@@ -48,55 +48,6 @@ with Ada.Numerics.Discrete_Random;
 
 package body Installer is
 
---  This will be used once alire's AWS supports https.
---  For the moment: just using curl.
---  procedure Download (URL : String; Destination_File : String) is
---      use AWS;
---      use Ada.Streams;
---      Result : constant Response.Data := Client.Get(URL => URL);
-   procedure Download (URL : String) is
-      Cmd  : constant String := "curl";
-               --(if Available_Command (curl) then "curl"
-               -- elsif Available_Command (wget) then "wget"
-               -- else raise Missing_Dependency);
-      Arg : constant String := "-OJL";
-               --(if Available_Command (curl) then "-OJL"
-               -- elsif Available_Command (wget) then "-q"
-               -- else raise Missing_Dependency);
-      Args : constant GNAT.OS_Lib.Argument_List (1 .. 2) :=
-         (1 => new String'(Arg),
-          2 => new String'(URL));
-      Status   : aliased Integer := 0;
-      Response : constant String :=
-        Get_Command_Output
-          (Command => Cmd, Arguments => Args, Input => "",
-           Status  => Status'Access);
-   begin
---  This will be used once alire's AWS supports https.
---  For the moment: just using curl.
---      if Response.Content_Type (Result) = "application/zip" then
---         declare
---            Message_Stream : Resources.File_Type;
---            Buffer         : Stream_Element_Array (1 .. 4096);
---            Last           : Stream_Element_Offset;
---            File           : Stream_IO.File_Type;
---         begin
---            Response.Message_Body (Result, Message_Stream);
---            Stream_IO.Create (File, Stream_IO.Out_File, Destination_File);
---            loop
---               Resources.Read (Message_Stream, Buffer, Last);
---               Stream_IO.Write (File, Buffer (1 .. Last));
---               exit when Last < Buffer'Last;
---            end loop;
---            Stream_IO.Close (File);
---         end;
---      else
---         raise Invalid_Download with
---            "Unable to download: File is not of type zip.";
---      end if;
-      null;
-   end Download;
-
    --  Creates a random string.
    function Random_String (Str_Len : Natural) return String is
       Alpha_Num : constant array (1 .. 62) of Character :=
@@ -192,6 +143,9 @@ package body Installer is
           (NL & "(This can be changed either by setting the """ &
            Defaults.Bin_Env & """ " &
            "environment variable or passing --bin=/directory/here)" & NL);
+      
+      --  Our available commands
+      Available_Command : constant Command_Supported := Test_Commands;
 
    begin
 
@@ -215,13 +169,14 @@ package body Installer is
               "Should never get here! ";
       end case;
 
-      if False then --not Available_Command (curl) and then Available_Command (wget) then 
+      if not Available_Command (curl) and then Available_Command (wget) then 
          raise Missing_Dependency
-           with NL & "----------------------------------------" &
+           with NL &
+           "----------------------------------------" &
            "----------------------------------------" & NL &
            "You must have curl or wget to use GetAda." & NL &
-           " Please at least install curl and then re-run." &
-           NL & "----------------------------------------" &
+           " Please at least install curl and then re-run." & NL &
+           "----------------------------------------" &
            "----------------------------------------";
       end if;
 
@@ -307,13 +262,6 @@ package body Installer is
       --  Download / extract Alire
       declare
          function Download_URL return String is
-   --  TODO: Have additional platforms, obviously this will NOT
-   --  work on aarch64 linux atm.
-   --  If alire provides other arches, then we can also just do:
-   --  "bin-" & To_Lower(Plat.Arch'Image) &
-   --  "-" & To_Lower(Plat.OS'Image) & ".zip";
-   --  So macos would be "bin-aarch64-macos.zip"
-   --  (obviously MacOS supports x86_86 but that's an exception)
    --  TODO: Also maybe download gnat and build from source for unknown archs?
    --  Also, some linux distros don't use glibc, so we may need to get a
    --  version of Alire that is not built against libc. Bootstrap?
@@ -326,18 +274,15 @@ package body Installer is
                  "/tags/v" & To_String (Our_Settings.Version)
                else "/latest");
 
-            --  Result : AWS.Response.Data;
-            --  Result := AWS.Client.Get(URL => URL);
-
             --  just use `curl -s URL` or wget :D
-            Cmd  : constant String := "curl";
-               --(if Available_Command (curl) then "curl"
-               -- elsif Available_Command (wget) then "wget"
-               -- else raise Missing_Dependency);
-            Arg : constant String := "-q";
-               --(if Available_Command (curl) then "-q"
-               -- elsif Available_Command (wget) then "-qO-"
-               -- else raise Missing_Dependency);
+            Cmd  : constant String := --  "curl";
+               (if Available_Command (curl) then "curl"
+                elsif Available_Command (wget) then "wget"
+                else raise Missing_Dependency);
+            Arg : constant String := --  "-q";
+               (if Available_Command (curl) then "-q"
+                elsif Available_Command (wget) then "-qO-"
+                else raise Missing_Dependency);
             Args : constant GNAT.OS_Lib.Argument_List (1 .. 2) :=
               (1 => new String'(Arg), 2 => new String'(URL));
             Status   : aliased Integer := 0;
@@ -392,6 +337,31 @@ package body Installer is
               with "Unable to find alire download of version: " &
               To_String (Our_Settings.Version);
          end Download_URL;
+
+         procedure Download (URL : String) is
+            Cmd  : constant String := --  "curl";
+                     (if Available_Command (curl) then "curl"
+                      elsif Available_Command (wget) then "wget"
+                      else raise Missing_Dependency);
+            Arg : constant String := --  "-OJL";
+                     (if Available_Command (curl) then "-OJL"
+                      elsif Available_Command (wget) then "-q"
+                      else raise Missing_Dependency);
+            Args : constant GNAT.OS_Lib.Argument_List (1 .. 2) :=
+               (1 => new String'(Arg),
+                2 => new String'(URL));
+            Status   : aliased Integer := 0;
+            Response : constant String :=
+            Get_Command_Output
+               (Command => Cmd, Arguments => Args, Input => "",
+               Status  => Status'Access, Err_To_Out => True);
+         begin
+            if Status /= 0 then
+               raise Invalid_Download with
+                  "The following occurred when trying to download " & URL &
+                  NL & Response;
+            end if;
+         end Download;
 
          --  Creates a temporary directory in Tmp_Dir directory
          --  It will try 1000 times.

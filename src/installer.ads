@@ -37,9 +37,6 @@ package Installer is
          or else raise Invalid_Version
            with "ERROR: Invalid version: " & To_String (Our_Settings.Version));
 private
-   --  Will add this back in when we have AWS
-   --  procedure Download (URL : String; Destination_File : String);
-   procedure Download (URL : String);
    --  Generate a random string of size Str_Len
    function Random_String (Str_Len : Natural) return String;
    procedure Extract_Alire (File : String) with
