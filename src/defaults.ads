@@ -18,7 +18,7 @@
 with Ada.Characters.Latin_1;
 package Defaults is
    --  About GetAda
-   Getada_Version : constant String := "0.2.0-dev"; --  Must match alire.toml
+   Getada_Version : constant String := "1.0.0-rc"; --  Must match alire.toml
 
    --  Directories, starting at root.
    Tmp_Dir  : constant String := "/tmp"; --  Location in temporary directory
@@ -66,7 +66,7 @@ package Defaults is
      "You can also set the version and tmp/cfg/binary directories by " & NL &
      "setting the following environment variables:" & NL &
      " * """ & Ver_Env & """ for Alire's version" & NL &
-     " * """ & Tmp_Env & """ for location of temp directory)" & NL &
+     " * """ & Tmp_Env & """ for location of temp directory" & NL &
      " * """ & Cfg_Env & """ for config directory" & NL &
      " * """ & Bin_Env & """ for binary directory" & NL &
      "That's it for right now!";

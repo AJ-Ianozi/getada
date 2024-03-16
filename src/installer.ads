@@ -23,7 +23,8 @@ with Defaults;
 package Installer is
 
    Invalid_Version, Invalid_Download, Invalid_File, No_Environment_Variable,
-   OS_Not_Yet_Supported, User_Aborted, Missing_Dependency : exception;
+   Platform_Not_Yet_Supported, User_Aborted,
+   Missing_Dependency : exception;
 
    --  Just to verify we're using theh correct version format.
    subtype Valid_Version is Character with

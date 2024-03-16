@@ -149,24 +149,49 @@ package body Installer is
 
    begin
 
-      if OS = Windows then
-         raise OS_Not_Yet_Supported
-           with NL & "----------------------------------------" &
-           "----------------------------------------" & NL &
-           "NOTE: Windows installation is not ready yet!" & NL &
-           " I recommend using alire's installer on https://alire.ada.dev/" &
-           NL & "----------------------------------------" &
-           "----------------------------------------";
-      end if;
-
-      --  TODO: Add unix type for linux/macos/freebsd/etc --
+      --  Check if the platform is currently supported by alire.
+      --  If etiher alire or I start building/distributing binaries for alr
+      --  then this can be updated.
       case OS is
-         when MacOS | Linux =>
-            null;
-         when others =>
-            raise OS_Not_Yet_Supported
-              with "The current OS is not yet supported. " &
-              "Should never get here! ";
+         when MacOS =>
+            if Arch not in x86_64 | aarch64 then
+               raise Platform_Not_Yet_Supported with NL &
+               "----------------------------------------" &
+               "----------------------------------------" & NL &
+               "Currently only x86_64/aarch64 is supported on MacOS" & NL &
+               "Alire may be built from source code from " & NL &
+               "https://github.com/alire-project/alire" & NL &
+               "----------------------------------------" &
+               "----------------------------------------";
+            end if;
+         when Linux =>
+            if Arch /= x86_64 then
+               raise Platform_Not_Yet_Supported with NL &
+               "----------------------------------------" &
+               "----------------------------------------" & NL &
+               "Currently only x86_64 is supported on Linux" & NL &
+               "Alire may be built from source code from " & NL &
+               "https://github.com/alire-project/alire" & NL &
+               "----------------------------------------" &
+               "----------------------------------------";
+            end if;
+         when Windows =>
+            raise Platform_Not_Yet_Supported with NL &
+            "----------------------------------------" &
+            "----------------------------------------" & NL &
+            "NOTE: Windows installation is not ready yet!" & NL &
+            " I recommend using alire's installer on https://alire.ada.dev/" &
+            NL & "----------------------------------------" &
+            "----------------------------------------";
+         when FreeBSD =>
+            raise Platform_Not_Yet_Supported with NL &
+            "----------------------------------------" &
+            "----------------------------------------" & NL &
+            "NOTE: FreeBSD installation is not ready yet!" & NL &
+            "Please install Alire via ports: " & NL &
+            "https://cgit.freebsd.org/ports/log/devel/alire" & NL &
+            "----------------------------------------" &
+            "----------------------------------------";
       end case;
 
       if not Available_Command (curl) and then Available_Command (wget) then 
@@ -294,7 +319,7 @@ package body Installer is
               (case OS is
                  when MacOS   => "bin-x86_64-macos.zip",
                  when Linux   => "bin-x86_64-linux.zip",
-                 when FreeBSD => "", -- coming soon
+                 when FreeBSD => "", -- Need self hosted runners to build this
                  when Windows => "bin-x86_64-windows.zip");
             --  the json parser stuff
             package Types is new JSON.Types (Long_Integer, Long_Float);
@@ -578,7 +603,7 @@ package body Installer is
       end if;
       Log.Save (Cfg_Dir & Defaults.Log_File);
    exception
-      when User_Aborted | OS_Not_Yet_Supported =>
+      when User_Aborted | Platform_Not_Yet_Supported =>
          raise;
       when others =>
          IO.Must_Say ("Something went wrong... Aborting installation...");
