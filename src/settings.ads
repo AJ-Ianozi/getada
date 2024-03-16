@@ -1,4 +1,4 @@
---    Copyright (C) 2022 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2022-2024 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
@@ -17,13 +17,11 @@
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Options;               use Options;
-with Local_Settings;        use Local_Settings;
 package Settings is
 
    No_Environment_Variable : exception;
 
    type Program_Settings is record
-      Current_Platform : Platform;
       Version          : Unbounded_String;
       Tmp_Dir          : Unbounded_String;
       Cfg_Dir          : Unbounded_String;

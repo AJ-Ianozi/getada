@@ -14,4 +14,4 @@ Thumbs.db
 *.msix
 *.msm
 *.msp
-
+*.code-workspace

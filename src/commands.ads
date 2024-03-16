@@ -1,4 +1,4 @@
---    Copyright (C) 2022 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2024 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
@@ -15,12 +15,15 @@
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package body Local_Settings is
-  function OS return OSs is (Linux);
-  function Arch return Archs is (aarch64);
-  function Init_Platform return Platform is
-    Result : constant Platform := (OS => OS, Arch => Arch);
-  begin
-    return Result;
-  end Init_Platform;
-end Local_Settings;
+package Commands is
+   --  Possible commands that are supported.
+   --  We need at least curl or wget.
+   type Possible_Commands is (curl, chmod, wget);
+   --  Runs "Cmd --version" and prints results.
+   function Test_Command (Cmd : String) return Boolean;
+   --  Available_Command (curl) = True if curl is supported.
+   --  Truth table
+   type Command_Supported is array (Possible_Commands'Range) of Boolean;
+   --  Generated commands supported function
+   function Test_Commands return Command_Supported;
+end Commands;

@@ -1,4 +1,4 @@
---    Copyright (C) 2022-2023 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2022-2024 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
@@ -21,7 +21,6 @@
 --    with AWS.Response;
 --    with AWS.Resources;
 --    with Ada.Streams.Stream_IO;
-with Local_Settings; use Local_Settings;
 with GNAT.Expect;    use GNAT.Expect;
 with GNAT.OS_Lib;
 --  Required for reading the json versions and getting the download URL.
@@ -34,6 +33,8 @@ with Prompts;     use Prompts;
 with Logger;      use Logger;
 with Files;       use Files;
 with Uninstaller; use Uninstaller;
+with Platform;    use Platform;
+with Commands;    use Commands;
 with Options;
 
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
@@ -42,49 +43,31 @@ with Ada.Text_IO;       use Ada.Text_IO;
 with Zip;
 with UnZip;
 
+--  For random string generator
+with Ada.Numerics.Discrete_Random;
+
 package body Installer is
 
---  This will be used once alire's AWS supports https.
---  For the moment: just using curl.
---  procedure Download (URL : String; Destination_File : String) is
---      use AWS;
---      use Ada.Streams;
---      Result : constant Response.Data := Client.Get(URL => URL);
-   procedure Download (URL : String) is
-      Cmd  : constant String                             := "curl";
-      Args : constant GNAT.OS_Lib.Argument_List (1 .. 4) :=
-        (1 => new String'("-O"), 2 => new String'("-J"),
-         3 => new String'("-L"), 4 => new String'(URL));
-      Status   : aliased Integer := 0;
-      Response : constant String :=
-        Get_Command_Output
-          (Command => Cmd, Arguments => Args, Input => "",
-           Status  => Status'Access);
+   --  Creates a random string.
+   function Random_String (Str_Len : Natural) return String is
+      Alpha_Num : constant array (1 .. 62) of Character :=
+         ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
+          'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+          's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
+          'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+          'U', 'V', 'W', 'X', 'Y', 'Z');
+      subtype Alpha_Range is Integer range 1 .. 62;
+      package Rand_Gen is new Ada.Numerics.Discrete_Random (Alpha_Range);
+      use Rand_Gen;
+      Gen : Generator;
    begin
---  This will be used once alire's AWS supports https.
---  For the moment: just using curl.
---      if Response.Content_Type (Result) = "application/zip" then
---         declare
---            Message_Stream : Resources.File_Type;
---            Buffer         : Stream_Element_Array (1 .. 4096);
---            Last           : Stream_Element_Offset;
---            File           : Stream_IO.File_Type;
---         begin
---            Response.Message_Body (Result, Message_Stream);
---            Stream_IO.Create (File, Stream_IO.Out_File, Destination_File);
---            loop
---               Resources.Read (Message_Stream, Buffer, Last);
---               Stream_IO.Write (File, Buffer (1 .. Last));
---               exit when Last < Buffer'Last;
---            end loop;
---            Stream_IO.Close (File);
---         end;
---      else
---         raise Invalid_Download with
---            "Unable to download: File is not of type zip.";
---      end if;
-      null;
-   end Download;
+      Reset (Gen);
+      return Result : String (1 .. Str_Len) do
+         for I in 1 .. Str_Len loop
+            Result (I) := Alpha_Num (Random (Gen));
+         end loop;
+      end return;
+   end Random_String;
 
    procedure Extract_Alire (File : String) is
       use Zip, UnZip;
@@ -126,13 +109,11 @@ package body Installer is
       --  The final resting place of the alire binary.
       Alire_Binary : constant String :=
         Bin_Dir & "/" & Defaults.Alire &
-        (if Our_Settings.Current_Platform.OS = Windows then ".exe" else "");
+        (if Platform.OS = Windows then ".exe" else "");
 
       Our_Shells : constant Shell_Array :=
-        (if
-           not Our_Settings.No_Update_Path
-           and then Our_Settings.Current_Platform.OS /= Windows
-         then Available_Shells (Our_Settings.Current_Platform)
+        (if not Our_Settings.No_Update_Path then
+            Available_Shells
          else (1 => (Null_Unbounded_String, null_shell)));
 
       --  For logging as we move through.
@@ -145,7 +126,7 @@ package body Installer is
          else "No version has been specified. Will attempt to install the " &
            "latest version of Alire." &
            IO.Say (NL & "(To specify a version, pass --version=x.y.z)")) &
-        NL & "Temporary files will be stored in the following directory: " &
+        NL & "Temporary files will be stored in a folder in: " &
         NL & Tmp_Dir & NL &
         IO.Say
           (NL & "(This can be changed with the """ & Defaults.Tmp_Env & """ " &
@@ -162,28 +143,67 @@ package body Installer is
           (NL & "(This can be changed either by setting the """ &
            Defaults.Bin_Env & """ " &
            "environment variable or passing --bin=/directory/here)" & NL);
+      
+      --  Our available commands
+      Available_Command : constant Command_Supported := Test_Commands;
 
    begin
 
-      if Our_Settings.Current_Platform.OS = Windows then
-         raise OS_Not_Yet_Supported
-           with NL & "----------------------------------------" &
+      --  Check if the platform is currently supported by alire.
+      --  If etiher alire or I start building/distributing binaries for alr
+      --  then this can be updated.
+      case OS is
+         when MacOS =>
+            if Arch not in x86_64 | aarch64 then
+               raise Platform_Not_Yet_Supported with NL &
+               "----------------------------------------" &
+               "----------------------------------------" & NL &
+               "Currently only x86_64/aarch64 is supported on MacOS" & NL &
+               "Alire may be built from source code from " & NL &
+               "https://github.com/alire-project/alire" & NL &
+               "----------------------------------------" &
+               "----------------------------------------";
+            end if;
+         when Linux =>
+            if Arch /= x86_64 then
+               raise Platform_Not_Yet_Supported with NL &
+               "----------------------------------------" &
+               "----------------------------------------" & NL &
+               "Currently only x86_64 is supported on Linux" & NL &
+               "Alire may be built from source code from " & NL &
+               "https://github.com/alire-project/alire" & NL &
+               "----------------------------------------" &
+               "----------------------------------------";
+            end if;
+         when Windows =>
+            raise Platform_Not_Yet_Supported with NL &
+            "----------------------------------------" &
+            "----------------------------------------" & NL &
+            "NOTE: Windows installation is not ready yet!" & NL &
+            " I recommend using alire's installer on https://alire.ada.dev/" &
+            NL & "----------------------------------------" &
+            "----------------------------------------";
+         when FreeBSD =>
+            raise Platform_Not_Yet_Supported with NL &
+            "----------------------------------------" &
+            "----------------------------------------" & NL &
+            "NOTE: FreeBSD installation is not ready yet!" & NL &
+            "Please install Alire via ports: " & NL &
+            "https://cgit.freebsd.org/ports/log/devel/alire" & NL &
+            "----------------------------------------" &
+            "----------------------------------------";
+      end case;
+
+      if not Available_Command (curl) and then Available_Command (wget) then 
+         raise Missing_Dependency
+           with NL &
+           "----------------------------------------" &
            "----------------------------------------" & NL &
-           "NOTE: Windows installation is not ready yet!" & NL &
-           " I recommend using alire's installer on https://alire.ada.dev/" &
-           NL & "----------------------------------------" &
+           "You must have curl or wget to use GetAda." & NL &
+           " Please at least install curl and then re-run." & NL &
+           "----------------------------------------" &
            "----------------------------------------";
       end if;
-
-      --  TODO: Add unix type for linux/macos/freebsd/etc --
-      case Our_Settings.Current_Platform.OS is
-         when MacOS | Linux =>
-            null;
-         when others =>
-            raise OS_Not_Yet_Supported
-              with "The current OS is not yet supported. " &
-              "Should never get here! ";
-      end case;
 
       IO.Must_Say (Settings_Message);
 
@@ -267,13 +287,6 @@ package body Installer is
       --  Download / extract Alire
       declare
          function Download_URL return String is
-   --  TODO: Have additional platforms, obviously this will NOT
-   --  work on aarch64 linux atm.
-   --  If alire provides other arches, then we can also just do:
-   --  "bin-" & To_Lower(Plat.Arch'Image) &
-   --  "-" & To_Lower(Plat.OS'Image) & ".zip";
-   --  So macos would be "bin-aarch64-macos.zip"
-   --  (obviously MacOS supports x86_86 but that's an exception)
    --  TODO: Also maybe download gnat and build from source for unknown archs?
    --  Also, some linux distros don't use glibc, so we may need to get a
    --  version of Alire that is not built against libc. Bootstrap?
@@ -286,22 +299,27 @@ package body Installer is
                  "/tags/v" & To_String (Our_Settings.Version)
                else "/latest");
 
-            --  Result : AWS.Response.Data;
-            --  Result := AWS.Client.Get(URL => URL);
-
-            --  just use `curl -s URL` :D
-            Cmd  : constant String                             := "curl";
+            --  just use `curl -s URL` or wget :D
+            Cmd  : constant String := --  "curl";
+               (if Available_Command (curl) then "curl"
+                elsif Available_Command (wget) then "wget"
+                else raise Missing_Dependency);
+            Arg : constant String := --  "-q";
+               (if Available_Command (curl) then "-q"
+                elsif Available_Command (wget) then "-qO-"
+                else raise Missing_Dependency);
             Args : constant GNAT.OS_Lib.Argument_List (1 .. 2) :=
-              (1 => new String'("-s"), 2 => new String'(URL));
+              (1 => new String'(Arg), 2 => new String'(URL));
             Status   : aliased Integer := 0;
             Response : constant String :=
               Get_Command_Output
                 (Command => Cmd, Arguments => Args, Input => "",
                  Status  => Status'Access);
             Suffex : constant String :=
-              (case Our_Settings.Current_Platform.OS is
+              (case OS is
                  when MacOS   => "bin-x86_64-macos.zip",
                  when Linux   => "bin-x86_64-linux.zip",
+                 when FreeBSD => "", -- Need self hosted runners to build this
                  when Windows => "bin-x86_64-windows.zip");
             --  the json parser stuff
             package Types is new JSON.Types (Long_Integer, Long_Float);
@@ -344,24 +362,78 @@ package body Installer is
               with "Unable to find alire download of version: " &
               To_String (Our_Settings.Version);
          end Download_URL;
+
+         procedure Download (URL : String) is
+            Cmd  : constant String := --  "curl";
+                     (if Available_Command (curl) then "curl"
+                      elsif Available_Command (wget) then "wget"
+                      else raise Missing_Dependency);
+            Arg : constant String := --  "-OJL";
+                     (if Available_Command (curl) then "-OJL"
+                      elsif Available_Command (wget) then "-q"
+                      else raise Missing_Dependency);
+            Args : constant GNAT.OS_Lib.Argument_List (1 .. 2) :=
+               (1 => new String'(Arg),
+                2 => new String'(URL));
+            Status   : aliased Integer := 0;
+            Response : constant String :=
+            Get_Command_Output
+               (Command => Cmd, Arguments => Args, Input => "",
+               Status  => Status'Access, Err_To_Out => True);
+         begin
+            if Status /= 0 then
+               raise Invalid_Download with
+                  "The following occurred when trying to download " & URL &
+                  NL & Response;
+            end if;
+         end Download;
+
+         --  Creates a temporary directory in Tmp_Dir directory
+         --  It will try 1000 times.
+         --  Raises an exception if unable to create directory.
+         function Unique_Dir return String is
+         begin
+            if not Ada.Directories.Exists (Tmp_Dir) then
+               raise Invalid_File with Tmp_Dir & " does not exist!";
+            end if;
+            loop
+               for I in 1 .. 1000 loop
+                  declare
+                     New_Directory : constant String :=
+                        Ada.Directories.Full_Name
+                           (Tmp_Dir & "/" & "tmp." & Random_String (16));
+                  begin
+                     if not Ada.Directories.Exists (New_Directory) then
+                        Ada.Directories.Create_Path (New_Directory);
+                        return New_Directory;
+                     end if;
+                  end;
+               end loop;
+               if
+                  Our_Settings.Non_Interactive or else
+                  Get_Answer ("Cannot create unique folder in " & Tmp_Dir &
+                              "... Keep searching?", Default_Answer => Yes) =
+                  No
+               then
+                  raise Invalid_File with
+                     "Unable to find unique dir in " & Tmp_Dir;
+               end if;
+            end loop;
+         end Unique_Dir;
+
          --  Fetch the download URL for Alire from github.
          URL : constant String := Download_URL;
          --  This contains the full .zip name based on the download URL.
          File_Name : constant String :=
            URL ((Index (URL, "/", Ada.Strings.Backward) + 1) .. URL'Last);
          --  This is the full path to save the file.
-         Save_Path : constant String := Tmp_Dir & "/" & File_Name;
+         Tmp_Path  : constant String := Unique_Dir;
+         Save_Path : constant String := Tmp_Path & "/" & File_Name;
       begin
-         --  Create the metadata directory if it doesn't alerady exist.
-         if not Ada.Directories.Exists (Tmp_Dir) then
-            IO.Say_Line ("Creating Directory: " & Tmp_Dir);
-            Ada.Directories.Create_Path (Tmp_Dir);
-         else
-            IO.Say_Line ("Directory " & Tmp_Dir & " detected.");
-         end if;
+         --  Create the metadata directory.
          Log.Logit (Created_Metadata, Success);
          --  Metadata directory is current working directory.
-         Ada.Directories.Set_Directory (Tmp_Dir);
+         Ada.Directories.Set_Directory (Tmp_Path);
          --  Download the zip if it doesn't already exist.
          if not Ada.Directories.Exists (Save_Path) then
             IO.Say_Line ("Downloading " & URL & " to " & Save_Path);
@@ -411,23 +483,15 @@ package body Installer is
       declare
          type Checks is (Chmod, Macos_xattr);
          Tested : array (Checks'Range) of Boolean :=
-           (Macos_xattr =>
-              (if Our_Settings.Current_Platform.OS = MacOS then False
-               else True),
+           (Macos_xattr => (if OS = MacOS then False else True),
             others => False);
-         Successfully_Executed : Boolean;
 
-         Alire_Args : constant GNAT.OS_Lib.Argument_List (1 .. 1) :=
-           (1 => new String'("--version"));
       begin
          Test_Alire :
          loop
             IO.Say_Line
               ("Testing Alire by running """ & Alire_Binary & " --version""");
-            GNAT.OS_Lib.Spawn
-              (Program_Name => Alire_Binary, Args => Alire_Args,
-               Success      => Successfully_Executed);
-            if not Successfully_Executed then
+            if not Test_Command (Alire_Binary) then
                IO.Say_Line
                  ("Unable to run binary... Attempting to troubleshoot.");
                if not Tested (Chmod) then
@@ -539,7 +603,7 @@ package body Installer is
       end if;
       Log.Save (Cfg_Dir & Defaults.Log_File);
    exception
-      when User_Aborted | OS_Not_Yet_Supported =>
+      when User_Aborted | Platform_Not_Yet_Supported =>
          raise;
       when others =>
          IO.Must_Say ("Something went wrong... Aborting installation...");

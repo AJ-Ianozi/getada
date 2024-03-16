@@ -1,4 +1,4 @@
---    Copyright (C) 2022 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2022-2024 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
@@ -14,9 +14,9 @@
 --
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 with Ada.Environment_Variables;
 with Ada.Directories;
+with Platform;
 with Defaults;
 package body Settings is
 
@@ -25,19 +25,19 @@ package body Settings is
         (if Path (Path'First) = '~' then
            Home_Dir & "/" &
            (if Path'Length > 1 then Path (Path'First + 1 .. Path'Last) else "")
-         else Path);
+         else
+           Path);
    begin
       return Ada.Directories.Full_Name (Corrected_Path);
    end Correct_Path;
 
    function Init_Settings (Options : Program_Options) return Program_Settings
    is
-      Current_Platform : constant Platform := Local_Settings.Init_Platform;
-
+      use Platform;
       --  On windows it's "HOMEPATH", but unix is "HOME".
       Home_Env : constant String :=
-        (case Current_Platform.OS is when Windows => "HOMEPATH",
-           when others                            => "HOME");
+        (case OS is when Windows => "HOMEPATH",
+           when others                    => "HOME");
 
       Home_Dir : constant String :=
         (if Ada.Environment_Variables.Exists (Home_Env) then
@@ -61,7 +61,7 @@ package body Settings is
             else
               (if Ada.Environment_Variables.Exists (Defaults.Tmp_Env) then
                  Ada.Environment_Variables.Value (Defaults.Tmp_Env)
-               else Home_Dir & Defaults.Tmp_Dir)));
+               else Defaults.Tmp_Dir)));
 
       --  TODO: Need to decide on a location...
       --  since alire uses ~/.config/alire for everything maybe
@@ -95,8 +95,7 @@ package body Settings is
          else "");
 
       Our_Settings : constant Program_Settings :=
-        (Current_Platform => Current_Platform,
-         Version          => To_Unbounded_String (Version),
+        (Version          => To_Unbounded_String (Version),
          Tmp_Dir          => To_Unbounded_String (Tmp_Dir),
          Cfg_Dir          => To_Unbounded_String (Cfg_Dir),
          Bin_Dir          => To_Unbounded_String (Bin_Dir),
