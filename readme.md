@@ -40,3 +40,10 @@ This software is experimental software that is still in the early stages. The de
 There's plenty of TODOs in the code, specifically in the `installer.adb` file, and I'm sure this could be better optimized and reworked.
 
 However, things do look stable, so I'm working to have a shell script that can be ran in the command prompt that will automatically download GetAda and run it.
+
+### License
+Getada is copyright A.J. Ianozi and Getada contributors.
+
+`getada-download.sh` and `www/getada.js` is copyright A.J. Ianozi, Diggory Blake, the Mozilla Corporation, and Rustup contributors, and was originally forked from [Rustup](https://github.com/rust-lang/rustup) as [getada-download](https://github.com/AJ-Ianozi/getada-download).
+
+All code in this repository is licensed under the GNU GENERAL PUBLIC LICENSE 3.0, which an exception to changes made to `getada-download.sh` and `www/getada.js` before forking, which are licensed under MIT and APACHE.
