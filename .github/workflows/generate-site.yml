@@ -19,8 +19,8 @@ jobs:
          - name: Build_Website
            uses: AnimMouse/setup-appimage@v1
            with:
-            name: yass
+            name: yass3
             url: https://github.com/yet-another-static-site-generator/yass/releases/download/v3.0/yass-x86_64.AppImage
          - run: >
-            yass build www
+            yass build www &&
             ls www/_output
