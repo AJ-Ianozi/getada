@@ -47,8 +47,8 @@ fi
 
 set -u
 
-# If RUSTUP_UPDATE_ROOT is unset or empty, default it.
-RUSTUP_UPDATE_ROOT="${RUSTUP_UPDATE_ROOT:-https://static.rust-lang.org/rustup}"
+# If GETADA_UPDATE_ROOT is unset or empty, default it.
+GETADA_UPDATE_ROOT="${GETADA_UPDATE_ROOT:-https://getada.dev/dist/}"
 
 # NOTICE: If you change anything here, please make the same changes in defaults.ads and options.adb
 usage() {
@@ -102,7 +102,7 @@ main() {
             ;;
     esac
 
-    local _url="${RUSTUP_UPDATE_ROOT}/dist/${_arch}/rustup-init${_ext}"
+    local _url="${GETADA_UPDATE_ROOT}/dist/${_arch}/getada${_ext}"
 
     local _dir
     if ! _dir="$(ensure mktemp -d)"; then
@@ -110,7 +110,7 @@ main() {
         # propagate exit status.
         exit 1
     fi
-    local _file="${_dir}/rustup-init${_ext}"
+    local _file="${_dir}/getada${_ext}"
 
     local _ansi_escapes_are_valid=false
     if [ -t 2 ]; then
@@ -301,16 +301,16 @@ ensure_loongarch_uapi() {
             ;;
         234)
             echo >&2
-            echo 'Your Linux kernel does not provide the ABI required by this Rust' >&2
+            echo 'Your Linux kernel does not provide the ABI required by this Alire' >&2
             echo 'distribution.  Please check with your OS provider for how to obtain a' >&2
-            echo 'compatible Rust package for your system.' >&2
+            echo 'compatible Alire package for your system.' >&2
             echo >&2
             exit 1
             ;;
         *)
             echo "Warning: Cannot determine current system's ABI flavor, continuing anyway." >&2
             echo >&2
-            echo 'Note that the official Rust distribution only works with the upstream' >&2
+            echo 'Note that the official Alire distribution only works with the upstream' >&2
             echo 'kernel ABI.  Installation will fail if your running kernel happens to be' >&2
             echo 'incompatible.' >&2
             ;;
@@ -516,9 +516,6 @@ get_architecture() {
                          echo "multiarch compatibility with i686 and/or amd64, then select one" 1>&2
                          echo "by re-running this script with the GETADA_CPUTYPE environment variable" 1>&2
                          echo "set to i686 or x86_64, respectively." 1>&2
-                         echo 1>&2
-                         echo "You will be able to add an x32 target after installation by running" 1>&2
-                         echo "  rustup target add x86_64-unknown-linux-gnux32" 1>&2
                          exit 1
                     }; else
                         _cputype=i686
@@ -548,7 +545,7 @@ get_architecture() {
         esac
     fi
 
-    # Detect armv7 but without the CPU features Rust needs in that build,
+    # Detect armv7 but without the CPU features Ada needs in that build,
     # and fall back to arm.
     # See https://github.com/rust-lang/rustup.rs/issues/587.
     if [ "$_ostype" = "unknown-linux-gnueabihf" ] && [ "$_cputype" = armv7 ]; then
@@ -564,7 +561,7 @@ get_architecture() {
 }
 
 say() {
-    printf 'rustup: %s\n' "$1"
+    printf 'getada: %s\n' "$1"
 }
 
 err() {
@@ -751,9 +748,9 @@ check_curl_for_retry_support() {
 # if support by local tools is detected. Detection currently supports these curl backends:
 # GnuTLS and OpenSSL (possibly also LibreSSL and BoringSSL). Return value can be empty.
 get_ciphersuites_for_curl() {
-    if [ -n "${RUSTUP_TLS_CIPHERSUITES-}" ]; then
+    if [ -n "${GETADA_TLS_CIPHERSUITES-}" ]; then
         # user specified custom cipher suites, assume they know what they're doing
-        RETVAL="$RUSTUP_TLS_CIPHERSUITES"
+        RETVAL="$GETADA_TLS_CIPHERSUITES"
         return
     fi
 
@@ -796,9 +793,9 @@ get_ciphersuites_for_curl() {
 # if support by local tools is detected. Detection currently supports these wget backends:
 # GnuTLS and OpenSSL (possibly also LibreSSL and BoringSSL). Return value can be empty.
 get_ciphersuites_for_wget() {
-    if [ -n "${RUSTUP_TLS_CIPHERSUITES-}" ]; then
+    if [ -n "${GETADA_TLS_CIPHERSUITES-}" ]; then
         # user specified custom cipher suites, assume they know what they're doing
-        RETVAL="$RUSTUP_TLS_CIPHERSUITES"
+        RETVAL="$GETADA_TLS_CIPHERSUITES"
         return
     fi
 
