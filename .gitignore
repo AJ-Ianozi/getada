@@ -2,6 +2,7 @@
 /bin/
 /alire/
 /config/
+/www/_output/
 .DS_Store
 Thumbs.db
 *~

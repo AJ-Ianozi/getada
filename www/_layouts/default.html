@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="{%Language%}">
+<head>
+<link rel="preload" href="assets/site.css" as="style">
+<link rel="stylesheet" href="assets/site.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="{%canonicallink%}" />
+@@IF@@ {%author%} /= ""
+<meta name="author" content="{%author%}">
+@@END_IF@@
+@@IF@@ {%description%} /= ""
+<meta name="description" content="{%description%}">
+@@END_IF@@
+@@IF@@ {%AtomLink%} /= ""
+{%AtomLink%}
+@@END_IF@@
+@@IF@@ {%title%} /= ""
+<title>{%title%} - {%Name%}</title>
+@@ELSE@@
+<title>{%Name%}</title>
+@@END_IF@@
+</head>
+<body>
+	<header id="site_header">
+		<img src="assets/ada.svg" width="200" height="200" />
+		<h1>GetAda</h1>
+		<p>This site provides a simple way to install Ada's toolchain <a href="https://alire.ada.dev/docs/#introduction">Alire</a> using <a href="https://github.com/aj-ianozi/getada">GetAda</a>.</p>
+	</header>
+	<main id="main_content">
+		<article>
+			<section>
+				{%Content%}
+			</section>
+		</article>
+	</main>
+	<footer id="site_footer">
+		<p>Copyright &copy; 2024 GetAda.Dev</p>
+		<p>Generated with <a href="https://yass.website/">Yet Another Static Website Generator</a>.
+	</footer>
+</body>
+</html>
