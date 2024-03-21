@@ -13,13 +13,13 @@ jobs:
       runs-on: ubuntu-20.04
 
       steps:
+
          - name: Checkout
            uses: actions/checkout@v3
 
          - name: Build_Website
            uses: AnimMouse/setup-appimage@v1
            with:
-            name: yass3
-            url: https://github.com/yet-another-static-site-generator/yass/releases/download/v3.0/yass-x86_64.AppImage
-         - run: >
-            ls
+             name: yass
+             url: https://github.com/yet-another-static-site-generator/yass/releases/download/v3.0/yass-x86_64.AppImage
+         - run: yass version
