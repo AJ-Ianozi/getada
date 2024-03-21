@@ -1,5 +1,8 @@
 name: Generate GetAda.dev
 
+on:
+   workflow_dispatch:
+
 # Use this stuff
 # https://github.com/cpina/github-action-push-to-another-repository
 # https://github.com/marketplace/actions/setup-appimage for
