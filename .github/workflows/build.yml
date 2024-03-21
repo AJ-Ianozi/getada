@@ -71,7 +71,7 @@ jobs:
       - name: Set up alire
         uses: alire-project/setup-alire@v1
 
-      - name: Build alire
+      - name: Build getada
         run: >
          alr -n update &&
          alr -n build --release

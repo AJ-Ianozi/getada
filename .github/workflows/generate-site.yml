@@ -1,0 +1,23 @@
+name: Generate GetAda.dev
+
+# Use this stuff
+# https://github.com/cpina/github-action-push-to-another-repository
+# https://github.com/marketplace/actions/setup-appimage for
+#    https://github.com/yet-another-static-site-generator/yass/releases/tag/v3.0
+
+jobs:
+   Generate_Website:
+      runs-on: ubuntu-20.04
+
+      steps:
+         - name: Checkout
+           uses: actions/checkout@v3
+
+         - name: Build_Website
+           uses: AnimMouse/setup-appimage@v1
+           with:
+            name: yass
+            url: https://github.com/yet-another-static-site-generator/yass/releases/download/v3.0/yass-x86_64.AppImage
+         - run: >
+            yass build www
+            ls www/_output
