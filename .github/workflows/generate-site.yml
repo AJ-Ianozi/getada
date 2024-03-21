@@ -22,5 +22,4 @@ jobs:
             name: yass3
             url: https://github.com/yet-another-static-site-generator/yass/releases/download/v3.0/yass-x86_64.AppImage
          - run: >
-            yass build www &&
-            ls www/_output
+            ls
