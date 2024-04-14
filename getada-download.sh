@@ -48,7 +48,7 @@ fi
 set -u
 
 # If GETADA_UPDATE_ROOT is unset or empty, default it.
-GETADA_UPDATE_ROOT="${GETADA_UPDATE_ROOT:-https://getada.dev/dist/}"
+GETADA_UPDATE_ROOT="${GETADA_UPDATE_ROOT:-https://getada.dev}"
 
 # NOTICE: If you change anything here, please make the same changes in defaults.ads and options.adb
 usage() {
@@ -162,10 +162,6 @@ main() {
     else
         printf '%s\n' 'info: downloading installer' 1>&2
     fi
-
-# Just print the url, file, and arch, then exit.  Don't do anything else.
-echo "$_url" "$_file" "$_arch"
-exit 1
 
     ensure mkdir -p "$_dir"
     ensure downloader "$_url" "$_file" "$_arch"
