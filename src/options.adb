@@ -95,14 +95,14 @@ package body Options is
                  or else Check_Argument
                    (Options.No_Update_Path, "-p", "--no-path", Arg)
                  or else Check_Argument
-                    (Options.Show_Version, "-s", "--show-version", Arg)
+                    (Options.Show_Version, "-v", "--version", Arg)
                  or else Check_Argument
                    (Options.Non_Interactive, "-n", "--non-interactive", Arg)
                  or else Check_Argument (Options.Quiet, "-q", "--quiet", Arg)
                  or else Check_Argument
                    (Options.Uninstall, "-u", "--uninstall", Arg)
                  or else Check_Argument
-                   (Options.Version, "-v", "--version=", Arg, I, Skip)
+                   (Options.Version, "-a", "--alire-version=", Arg, I, Skip)
                  or else Check_Argument
                    (Options.Tmp_Dir, "-t", "--tmp=", Arg, I, Skip)
                  or else Check_Argument

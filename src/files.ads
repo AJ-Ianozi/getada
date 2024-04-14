@@ -19,4 +19,11 @@ package Files is
    --  Returns if a line exists in a given file.  If the file doesn't exist,
    --  it will return False.
    function Line_Exists (Full_Path : String; Line : String) return Boolean;
+   --  Creates a random directory, returning that directory as a string.
+   --  Set "Ask" to true if you want to return a directory.
+   function Unique_Dir
+      (Parent : String; No_Prompt : Boolean := True)
+   return String;
+private
+   function Random_String (Str_Len : Natural) return String;
 end Files;

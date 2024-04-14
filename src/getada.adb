@@ -31,7 +31,7 @@ procedure Getada is
 begin
 
    --  Welcome the user to our program :)
-   if not Options.Quiet then
+   if not Options.Quiet and then not Options.Show_Version then
       Put_Line (Defaults.Welcome_Message);
    end if;
 
@@ -40,7 +40,7 @@ begin
       Put_Line (Defaults.Help_Message);
    elsif Options.Show_Version then
       --  Just show the version and exit.  -q won't count.
-      Put_Line (Defaults.Getada_Version);
+      Put_Line (Defaults.Getada_Command & " " & Defaults.Getada_Version);
    else
       declare
          Settings : constant Program_Settings := Init_Settings (Options);
@@ -55,6 +55,7 @@ begin
       end;
    end if;
 exception
-   when Installer.User_Aborted =>
+   when Defaults.User_Aborted =>
       Put_Line ("Aborted... Closing program.");
+   when Defaults.Graceful_Exit => null;
 end Getada;

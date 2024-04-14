@@ -28,6 +28,7 @@ package Settings is
       Bin_Dir          : Unbounded_String;
       Home_Dir         : Unbounded_String;
       Path_Env         : Unbounded_String;
+      Exec_Path        : Unbounded_String;
       No_Update_Path   : Boolean;
       Non_Interactive  : Boolean;
       Quiet            : Boolean;
@@ -38,5 +39,5 @@ package Settings is
 
 private
    function Correct_Path (Home_Dir : String; Path : String) return String;
-
+   function Get_Exec_Path return String;
 end Settings;

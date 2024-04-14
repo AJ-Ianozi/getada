@@ -18,10 +18,10 @@
 pragma Assertion_Policy (Check);
 with Settings; use Settings;
 with Logger;   use Logger;
+
 package Uninstaller is
    No_Log_Found : exception;
    Invalid_Log  : exception;
-   User_Aborted : exception;
    --  Starts uninstaller for getada+alire based on provided settings.
    procedure Uninstall (Our_Settings : Program_Settings);
 

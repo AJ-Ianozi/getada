@@ -37,6 +37,7 @@ package Logger is
       Created_Bin,
       Extracted,
       Alr_Tested,
+      Copied_Getada,
       Created_Env_File,
       Added_Env_File);
    --  The status of each step

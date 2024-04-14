@@ -43,31 +43,7 @@ with Ada.Text_IO;       use Ada.Text_IO;
 with Zip;
 with UnZip;
 
---  For random string generator
-with Ada.Numerics.Discrete_Random;
-
 package body Installer is
-
-   --  Creates a random string.
-   function Random_String (Str_Len : Natural) return String is
-      Alpha_Num : constant array (1 .. 62) of Character :=
-         ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
-          'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
-          's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
-          'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-          'U', 'V', 'W', 'X', 'Y', 'Z');
-      subtype Alpha_Range is Integer range 1 .. 62;
-      package Rand_Gen is new Ada.Numerics.Discrete_Random (Alpha_Range);
-      use Rand_Gen;
-      Gen : Generator;
-   begin
-      Reset (Gen);
-      return Result : String (1 .. Str_Len) do
-         for I in 1 .. Str_Len loop
-            Result (I) := Alpha_Num (Random (Gen));
-         end loop;
-      end return;
-   end Random_String;
 
    procedure Extract_Alire (File : String) is
       use Zip, UnZip;
@@ -78,13 +54,13 @@ package body Installer is
       --  then this will break.
       --  Also this won't work on Windows :)
       if Exists (Zip_File, "bin/alr") then
-         Extract (from => File, what => "bin/alr", rename => Defaults.Alire);
+         Extract (from => File, what => "bin/alr", rename => Defaults.Alire_Command);
       elsif Exists (Zip_File, "bin/alr.exe") then
          Extract
            (from   => File, what => "bin/alr",
-            rename => Defaults.Alire & ".exe");
+            rename => Defaults.Alire_Command & ".exe");
       else
-         raise Invalid_File
+         raise Defaults.Invalid_File
            with "Archive does not contain bin/alr." &
            " If Alire has changed their zip structure, file a bug report.";
       end if;
@@ -108,7 +84,12 @@ package body Installer is
 
       --  The final resting place of the alire binary.
       Alire_Binary : constant String :=
-        Bin_Dir & "/" & Defaults.Alire &
+        Bin_Dir & "/" & Defaults.Alire_Command &
+        (if Platform.OS = Windows then ".exe" else "");
+      
+      -- The final resting place of the getada binary
+      Getada_Binary : constant String :=
+         Bin_Dir & "/" & Defaults.Getada_Command &
         (if Platform.OS = Windows then ".exe" else "");
 
       Our_Shells : constant Shell_Array :=
@@ -137,7 +118,7 @@ package body Installer is
           (NL & "(This can be changed either by setting the """ &
            Defaults.Cfg_Env &
            """ environment variable or passing --cfg=/directory/here)" & NL) &
-        NL & "Alire's binary will be installed as """ & Defaults.Alire &
+        NL & "Alire's binary will be installed as """ & Defaults.Alire_Command &
         """ in " & "the following location:" & NL & Bin_Dir & NL &
         IO.Say
           (NL & "(This can be changed either by setting the """ &
@@ -155,7 +136,7 @@ package body Installer is
       case OS is
          when MacOS =>
             if Arch not in x86_64 | aarch64 then
-               raise Platform_Not_Yet_Supported with NL &
+               raise Defaults.Platform_Not_Yet_Supported with NL &
                "----------------------------------------" &
                "----------------------------------------" & NL &
                "Currently only x86_64/aarch64 is supported on MacOS" & NL &
@@ -166,7 +147,7 @@ package body Installer is
             end if;
          when Linux =>
             if Arch /= x86_64 then
-               raise Platform_Not_Yet_Supported with NL &
+               raise Defaults.Platform_Not_Yet_Supported with NL &
                "----------------------------------------" &
                "----------------------------------------" & NL &
                "Currently only x86_64 is supported on Linux" & NL &
@@ -176,7 +157,7 @@ package body Installer is
                "----------------------------------------";
             end if;
          when Windows =>
-            raise Platform_Not_Yet_Supported with NL &
+            raise Defaults.Platform_Not_Yet_Supported with NL &
             "----------------------------------------" &
             "----------------------------------------" & NL &
             "NOTE: Windows installation is not ready yet!" & NL &
@@ -184,7 +165,7 @@ package body Installer is
             NL & "----------------------------------------" &
             "----------------------------------------";
          when FreeBSD =>
-            raise Platform_Not_Yet_Supported with NL &
+            raise Defaults.Platform_Not_Yet_Supported with NL &
             "----------------------------------------" &
             "----------------------------------------" & NL &
             "NOTE: FreeBSD installation is not ready yet!" & NL &
@@ -195,7 +176,7 @@ package body Installer is
       end case;
 
       if not Available_Command (curl) and then Available_Command (wget) then 
-         raise Missing_Dependency
+         raise Defaults.Missing_Dependency
            with NL &
            "----------------------------------------" &
            "----------------------------------------" & NL &
@@ -231,7 +212,7 @@ package body Installer is
               "press ""enter"" with no input for interactive mode")
          is
             when No =>
-               raise User_Aborted;
+               raise Defaults.User_Aborted;
             when Other =>
                New_Line;
                Put_Line ("Switching to interactive mode...");
@@ -303,11 +284,11 @@ package body Installer is
             Cmd  : constant String := --  "curl";
                (if Available_Command (curl) then "curl"
                 elsif Available_Command (wget) then "wget"
-                else raise Missing_Dependency);
+                else raise Defaults.Missing_Dependency);
             Arg : constant String := --  "-q";
                (if Available_Command (curl) then "-q"
                 elsif Available_Command (wget) then "-qO-"
-                else raise Missing_Dependency);
+                else raise Defaults.Missing_Dependency);
             Args : constant GNAT.OS_Lib.Argument_List (1 .. 2) :=
               (1 => new String'(Arg), 2 => new String'(URL));
             Status   : aliased Integer := 0;
@@ -328,7 +309,7 @@ package body Installer is
             Parser : Parsers.Parser :=
               Parsers.Create
                 ((if Response (Response'First) = '{' then Response
-                  else raise Invalid_Download
+                  else raise Defaults.Invalid_Download
                       with "Unable to download from the following URL: '" &
                       URL & "'... Expecting JSON but got: " & Response));
             Value : constant Types.JSON_Value := Parser.Parse;
@@ -358,7 +339,7 @@ package body Installer is
                   end;
                end loop;
             end if;
-            raise Invalid_Version
+            raise Defaults.Invalid_Version
               with "Unable to find alire download of version: " &
               To_String (Our_Settings.Version);
          end Download_URL;
@@ -367,11 +348,11 @@ package body Installer is
             Cmd  : constant String := --  "curl";
                      (if Available_Command (curl) then "curl"
                       elsif Available_Command (wget) then "wget"
-                      else raise Missing_Dependency);
+                      else raise Defaults.Missing_Dependency);
             Arg : constant String := --  "-OJL";
                      (if Available_Command (curl) then "-OJL"
                       elsif Available_Command (wget) then "-q"
-                      else raise Missing_Dependency);
+                      else raise Defaults.Missing_Dependency);
             Args : constant GNAT.OS_Lib.Argument_List (1 .. 2) :=
                (1 => new String'(Arg),
                 2 => new String'(URL));
@@ -382,44 +363,11 @@ package body Installer is
                Status  => Status'Access, Err_To_Out => True);
          begin
             if Status /= 0 then
-               raise Invalid_Download with
+               raise Defaults.Invalid_Download with
                   "The following occurred when trying to download " & URL &
                   NL & Response;
             end if;
          end Download;
-
-         --  Creates a temporary directory in Tmp_Dir directory
-         --  It will try 1000 times.
-         --  Raises an exception if unable to create directory.
-         function Unique_Dir return String is
-         begin
-            if not Ada.Directories.Exists (Tmp_Dir) then
-               raise Invalid_File with Tmp_Dir & " does not exist!";
-            end if;
-            loop
-               for I in 1 .. 1000 loop
-                  declare
-                     New_Directory : constant String :=
-                        Ada.Directories.Full_Name
-                           (Tmp_Dir & "/" & "tmp." & Random_String (16));
-                  begin
-                     if not Ada.Directories.Exists (New_Directory) then
-                        Ada.Directories.Create_Path (New_Directory);
-                        return New_Directory;
-                     end if;
-                  end;
-               end loop;
-               if
-                  Our_Settings.Non_Interactive or else
-                  Get_Answer ("Cannot create unique folder in " & Tmp_Dir &
-                              "... Keep searching?", Default_Answer => Yes) =
-                  No
-               then
-                  raise Invalid_File with
-                     "Unable to find unique dir in " & Tmp_Dir;
-               end if;
-            end loop;
-         end Unique_Dir;
 
          --  Fetch the download URL for Alire from github.
          URL : constant String := Download_URL;
@@ -427,7 +375,8 @@ package body Installer is
          File_Name : constant String :=
            URL ((Index (URL, "/", Ada.Strings.Backward) + 1) .. URL'Last);
          --  This is the full path to save the file.
-         Tmp_Path  : constant String := Unique_Dir;
+         Tmp_Path  : constant String :=
+            Unique_Dir (Tmp_Dir, Our_Settings.Non_Interactive);
          Save_Path : constant String := Tmp_Path & "/" & File_Name;
       begin
          --  Create the metadata directory.
@@ -464,82 +413,44 @@ package body Installer is
          Ada.Directories.Set_Directory (Bin_Dir);
       --  Check if alr already exists.  If it does, confirm that they want to
          --   overwrite it.
-         if Ada.Directories.Exists (Bin_Dir & "/" & Defaults.Alire)
+         if Ada.Directories.Exists (Bin_Dir & "/" & Defaults.Alire_Command)
            and then
              (if Our_Settings.Non_Interactive then Yes
               else Get_Answer
                   ("The following file already exists:" & Bin_Dir & "/" &
-                   Defaults.Alire & " ... Replace it?",
+                   Defaults.Alire_Command & " ... Replace it?",
                    Default_Answer => Yes)) =
              No
          then
-            raise User_Aborted;
+            raise Defaults.User_Aborted;
          end if;
          IO.Say_Line ("Extracting: " & Save_Path & " to " & Bin_Dir);
          Extract_Alire (Save_Path);
          Log.Logit (Extracted, Success, Alire_Binary);
       end;
-      --  Verify alire is there and executable (we may have to set +x if not)
-      declare
-         type Checks is (Chmod, Macos_xattr);
-         Tested : array (Checks'Range) of Boolean :=
-           (Macos_xattr => (if OS = MacOS then False else True),
-            others => False);
-
-      begin
-         Test_Alire :
-         loop
-            IO.Say_Line
-              ("Testing Alire by running """ & Alire_Binary & " --version""");
-            if not Test_Command (Alire_Binary) then
-               IO.Say_Line
-                 ("Unable to run binary... Attempting to troubleshoot.");
-               if not Tested (Chmod) then
-                  declare
-                     Chmod_Success : Boolean;
-                     Chmod_Args : constant GNAT.OS_Lib.Argument_List
-                       (1 .. 2) :=
-                       (1 => new String'("+x"),
-                        2 => new String'(Alire_Binary));
-                  begin
-                     --  TODO: Handle if they don't have chmod
-                     --    or if it's not stored at /bin/chmod
-                     IO.Say_Line
-                       ("Attempting ""/bin/chmod +x " & Alire_Binary & """");
-                     GNAT.OS_Lib.Spawn
-                       (Program_Name => "/bin/chmod", Args => Chmod_Args,
-                        Success      => Chmod_Success);
-                     Tested (Chmod) := True;
-                  end;
-               elsif not Tested (Macos_xattr) then
-                  declare
-                     xattr_Success : Boolean;
-                     xattr_Args : constant GNAT.OS_Lib.Argument_List
-                       (1 .. 3) :=
-                       (1 => new String'("-d"),
-                        2 => new String'("com.apple.quarantine"),
-                        3 => new String'(Alire_Binary));
-                  begin
-                     IO.Say_Line
-                       ("Attempting ""/usr/bin/xattr -d " &
-                        "com.apple.quarantine " & Alire_Binary & """");
-                     GNAT.OS_Lib.Spawn
-                       (Program_Name => "/usr/bin/xattr", Args => xattr_Args,
-                        Success      => xattr_Success);
-                  end;
-                  Tested (Macos_xattr) := True;
-               else -- not chmod_tried
-                  raise Invalid_File
-                    with Alire_Binary &
-                    " is not a valid executible by this system.";
-               end if;
-            else
-               IO.Say_Line ("Sucessfully able to run binary.");
-               exit Test_Alire;
-            end if;
-         end loop Test_Alire;
-         Log.Logit (Alr_Tested, Success, Alire_Binary);
-      end;
+      --  If getada isn't in our binary path, copy that over too.
+      if Our_Settings.Exec_Path /= Getada_Binary then
+         declare
+            Cur_Getada : constant String := To_String (Our_Settings.Exec_Path);
+         begin
+            Put_Line ("Copying " & Cur_Getada & " to " & Getada_Binary);
+            Ada.Directories.Copy_File (Cur_Getada, Getada_Binary);
+            Log.Logit (Copied_Getada, Success, Getada_Binary);
+         end;
+      end if;
+      --  Verify alr and getada are there and executable
+      --  (we may have to set +x if not)
+      if not Test_Binary (Alire_Binary, IO) then
+         raise Defaults.Invalid_File
+               with Getada_Binary &
+               " is not a valid executible by this system.";
+      end if;      
+      if not Test_Binary (Getada_Binary, IO) then
+         raise Defaults.Invalid_File
+               with Getada_Binary &
+               " is not a valid executible by this system.";
+      end if;
+      Log.Logit (Alr_Tested, Success, Alire_Binary);
       --  At this point alr works, time to add it to path if requested.
       if not Our_Settings.No_Update_Path then
          declare
@@ -601,9 +512,34 @@ package body Installer is
             end if;
          end;
       end if;
+      IO.Say_Line ("");
+      IO.Say_Line ("Alire is now installed.  It can be called via ""alr""");
+      IO.Say_Line ("");
+      IO.Say_Line ("To uninstall alire, simply run:");
+      IO.Say_Line ("""getada --uninstall""");
+      IO.Say_Line ("");
+      IO.Say_Line ("To create a new ada project, simply run:");
+      IO.Say_Line ("""alr init --bin new_project""");
+      IO.Say_Line ("This will create a new ada in the folder ""new_project""");
+      IO.Say_Line ("To build an ada project, run ""alr build""");
+      IO.Say_Line ("Have a tutorial to start on your first project:");
+      IO.Say_Line ("https://ada-lang.io/docs/learn/tutorial/hello-world");
+      IO.Say_Line ("");
+      if Our_Settings.No_Update_Path then
+         IO.Say_Line
+            (Bin_Dir & " was not added to PATH and you may want to do that.");         
+      else
+         IO.Say_Line ("You may need to restart your shell.");
+         IO.Say_Line ("Doing so should add """ & Bin_Dir & """ to $PATH.");
+         IO.Say_Line ("To configure your current shell without restarting, " &
+                      "please run the following");
+         IO.Say_Line ("command in your terminal (note the leading DOT):");
+         IO.Say_Line (". """ & Cfg_Dir & "/" & Get_Shell_Env (sh) & """");
+      end if;
+      IO.Say_Line ("");
       Log.Save (Cfg_Dir & Defaults.Log_File);
    exception
-      when User_Aborted | Platform_Not_Yet_Supported =>
+      when Defaults.User_Aborted | Defaults.Platform_Not_Yet_Supported =>
          raise;
       when others =>
          IO.Must_Say ("Something went wrong... Aborting installation...");

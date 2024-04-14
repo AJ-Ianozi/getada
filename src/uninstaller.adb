@@ -20,8 +20,10 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Strings.Fixed;     use Ada.Strings.Fixed;
 with Ada.Text_IO;           use Ada.Text_IO;
 with Ada.IO_Exceptions;
+with GNAT.OS_Lib;
 
 with Console_IO; use Console_IO;
+with Commands;   use Commands;
 with Files;      use Files;
 with Prompts;    use Prompts;
 with Defaults;
@@ -34,6 +36,11 @@ package body Uninstaller is
    is
       IO           : constant C_IO             := Init (Our_Settings);
       Old_Settings : constant Program_Settings := Log.Get_Settings;
+
+      Cur_Getada : constant String := To_String (Our_Settings.Exec_Path);
+
+      --  Used to check if Getada has been copied to the binary file or not
+      Getada_Copied : Boolean := False;
 
       --  Removes the env file entry from config files.
       procedure Remove_Env_Files (Data : String; Pretend : Boolean := False) is
@@ -112,7 +119,7 @@ package body Uninstaller is
       exception
          when Ada.IO_Exceptions.Use_Error =>
             Put_Line (Standard_Error, "Unable to remove file: " & Data);
-            Put_Line (Standard_Error, "Reason: In Use.");
+            Put_Line (Standard_Error, "Reason: In might be in use.");
          when others =>
             Put_Line (Standard_Error, "Unable to remove file: " & Data);
             Put_Line (Standard_Error, "Other error detected.");
@@ -132,45 +139,107 @@ package body Uninstaller is
       exception
          when Ada.IO_Exceptions.Use_Error =>
             Put_Line (Standard_Error, "Unable to remove directory: " & Data);
-            Put_Line (Standard_Error, "Reason: In Use");
+            Put_Line (Standard_Error, "Reason: Not empty.");
          when others =>
             Put_Line (Standard_Error, "Unable to remove file: " & Data);
             Put_Line (Standard_Error, "Other error detected.");
       end Remove_Dir;
 
    begin
-      --  Show what will happen when uninstalled.
-      if Pretend then
-         IO.Must_Say
-           ("The following will be preformed to uninstall Alire and Getada:");
-      end if;
-      for S in reverse Stage'Range loop
-         --  Check if work was done on this entry (ignore NA/Failed)
-         if Log.Get_Status (S) = Success then
-            case S is
-               when Added_Env_File =>
-                  --  Remove the env file command from files.
-                  Remove_Env_Files (Log.Get_Data (S), Pretend);
-               when Created_Env_File =>
-                  --  Remove the env file itself
-                  Remove_File (Log.Get_Data (S), Pretend);
-               when Extracted =>
-                  --  Remove the extracted binary file
-                  Remove_File (Log.Get_Data (S), Pretend);
-               when Downloaded =>
-                  --  Remove the downloaded file
-                  Remove_File (Log.Get_Data (S), Pretend);
-               when others =>
-                  null;
-            end case;
+      --  If not pretending check if current getada binary we're running is
+      --  In a path to be deleted.
+      --  If it is, we need to move it to a temporary directory and re-run
+      --  the uninstaller.
+      Ada.Directories.Set_Directory (To_String (Our_Settings.Tmp_Dir));
+      if not Pretend and then
+         Ada.Directories.Containing_Directory (Cur_Getada) =
+            Old_Settings.Bin_Dir
+      then
+         declare
+            use GNAT.OS_Lib;
+            Exit_Code     : Process_Id;
+            Tmp_Path      : constant String :=
+                             Unique_Dir (To_String (Our_Settings.Tmp_Dir));
+            New_Getada    : constant String := Tmp_Path &
+                              "/" & Defaults.Getada_Command;
+            Arg_List : constant Argument_List (1 .. 5) :=
+                        (1 => new String'("--uninstall"),
+                         2 => new String'("--non-interactive"),
+                         3 => new String'("--tmp=" & To_String
+                                                      (Our_Settings.Tmp_Dir)),
+                         4 => new String'("--cfg=" & To_String
+                                                      (Our_Settings.Cfg_Dir)),
+                         5 => new String'("--bin=" & To_String
+                                                      (Our_Settings.Bin_Dir)));
+
+         begin
+            --  Set current working directory to new temp path
+            IO.Must_Say
+               ("Copying getada from " & Cur_Getada & " to " & New_Getada);
+            --  Copy current binary to temp path
+            Ada.Directories.Copy_File (Cur_Getada, New_Getada);
+            if not Test_Binary (New_Getada, IO, True) then
+               raise Defaults.Invalid_File with
+                  "Unable to copy uninstaller to temp directory " & New_Getada;
+            end if;
+            --  Run the new binary and exit.
+            IO.Must_Say ("Restarting Uninstaller.");
+            Exit_Code := Non_Blocking_Spawn
+                           (Program_Name => New_Getada,
+                            Args => Arg_List);
+            if Exit_Code = Invalid_Pid then
+               raise Defaults.Invalid_File with
+                  "Unable to run installer from " & New_Getada;
+            else
+               raise Defaults.Graceful_Exit;
+            end if;
+         end;
+      else
+         --  If pretending, show what will happens when uninstalled
+         if Pretend then
+            IO.Must_Say
+            ("The following will be preformed to uninstall Alire and Getada:");
+         else
+            IO.Must_Say ("Uninstalling...");
          end if;
-      end loop;
-      --  Remove metadata, bin dir, log, and config directory.
-      Remove_Dir (To_String (Old_Settings.Tmp_Dir), Pretend);
-      Remove_Dir (To_String (Old_Settings.Bin_Dir), Pretend);
-      Remove_File
-        (To_String (Old_Settings.Cfg_Dir & Defaults.Log_File), Pretend);
-      Remove_Dir (To_String (Old_Settings.Cfg_Dir), Pretend);
+
+         for S in reverse Stage'Range loop
+            --  Check if work was done on this entry (ignore NA/Failed)
+            if Log.Get_Status (S) = Success then
+               case S is
+                  when Added_Env_File =>
+                     --  Remove the env file command from files.
+                     Remove_Env_Files (Log.Get_Data (S), Pretend);
+                  when Created_Env_File =>
+                     --  Remove the env file itself
+                     Remove_File (Log.Get_Data (S), Pretend);
+                  when Extracted =>
+                     --  Remove the extracted binary file
+                     Remove_File (Log.Get_Data (S), Pretend);
+                  when Copied_Getada =>
+                     Getada_Copied := True;
+                  when others =>
+                     null;
+               end case;
+            end if;
+         end loop;
+         --  Remove Getada binary file if it exists
+         if Getada_Copied then
+            Remove_File (Log.Get_Data (Copied_Getada), Pretend);
+         end if;
+         --  Remove the getada bin folder if we can.
+         Remove_Dir (To_String (Old_Settings.Bin_Dir), Pretend);
+         --  Remove log file if we can.
+         Remove_File (To_String (Old_Settings.Cfg_Dir & Defaults.Log_File),
+                      Pretend);
+         --  Remove config directory if we can
+         Remove_Dir (To_String (Old_Settings.Cfg_Dir), Pretend);
+         if not Pretend then
+            IO.Must_Say ("Alire has (hopefully) been uninstalled.");
+            IO.Must_Say ("To reinstall, please visit https://www.getada.dev/");
+            IO.Must_Say ("Please press any key to continue.");
+         end if;
+      end if;
    end Process_Uninstall;
 
    --  Uninstaller utilizing log and program settings. Prompts user if needed.
@@ -185,11 +254,10 @@ package body Uninstaller is
          Process_Uninstall (Log, Our_Settings, Pretend => True);
          if Get_Answer ("Do you wish to continue?", Default_Answer => No) = No
          then --  Thanks to Donna!  No longer a case statement.
-            raise User_Aborted;
+            raise Defaults.User_Aborted;
          end if;
       end if;
       Process_Uninstall (Log, Our_Settings);
-
    end Uninstall;
 
    --  General uninstaller just utilizing program settings.
@@ -204,7 +272,6 @@ package body Uninstaller is
       end;
    exception
       when Invalid_File =>
-         Put_Line ("crap");
          raise No_Log_Found
            with """" & Log_File & "..." & Defaults.NL &
            "If alire is installed with Getada then please pass:" &

@@ -22,10 +22,6 @@ with Settings;              use Settings;
 with Defaults;
 package Installer is
 
-   Invalid_Version, Invalid_Download, Invalid_File, No_Environment_Variable,
-   Platform_Not_Yet_Supported, User_Aborted,
-   Missing_Dependency : exception;
-
    --  Just to verify we're using theh correct version format.
    subtype Valid_Version is Character with
         Static_Predicate => Valid_Version in 'A' .. 'Z' | 'a' .. 'z' |
@@ -35,15 +31,13 @@ package Installer is
       Pre =>
       (for all I in 1 .. Length (Our_Settings.Version) =>
          Element (Our_Settings.Version, I) in Valid_Version
-         or else raise Invalid_Version
+         or else raise Defaults.Invalid_Version
            with "ERROR: Invalid version: " & To_String (Our_Settings.Version));
 private
-   --  Generate a random string of size Str_Len
-   function Random_String (Str_Len : Natural) return String;
    procedure Extract_Alire (File : String) with
       Pre => Ada.Directories.Exists (File)
-      or else raise Invalid_File with "Unable to load file: " & File,
-      Post => Ada.Directories.Exists (Defaults.Alire)
-      or else raise Invalid_File
-        with "Unable to find """ & Defaults.Alire & """ in: " & File;
+      or else raise Defaults.Invalid_File with "Unable to load file: " & File,
+      Post => Ada.Directories.Exists (Defaults.Alire_Command)
+      or else raise Defaults.Invalid_File
+        with "Unable to find """ & Defaults.Alire_Command & """ in: " & File;
 end Installer;

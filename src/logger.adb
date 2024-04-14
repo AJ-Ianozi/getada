@@ -68,7 +68,11 @@ package body Logger is
       Log_File   : File_Type;
       Stream_Ptr : Stream_Access;
    begin
-      Create (Log_File, Out_File, File_Name);
+      if Ada.Directories.Exists (File_Name) then
+         Open (Log_File, Out_File, File_Name);
+      else
+         Create (Log_File, Out_File, File_Name);
+      end if;
       Stream_Ptr := Stream (Log_File);
       --  First write out the current settings
       Program_Settings'Write (Stream_Ptr, Log.Current_Settings);

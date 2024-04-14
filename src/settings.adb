@@ -15,10 +15,39 @@
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 with Ada.Environment_Variables;
+with Ada.Strings.Fixed;
+with Ada.Command_Line;
 with Ada.Directories;
+with GNAT.OS_Lib;
+with GNAT.Expect;
 with Platform;
 with Defaults;
 package body Settings is
+   function Get_Exec_Path return String is
+      use Ada.Strings.Fixed;
+      --  The command used to call the program
+      Current_Name : constant String := Ada.Command_Line.Command_Name;
+   begin
+      --  If this isn't a folder in PATH.  Easy.
+      if Index (Current_Name, "/") > 0 then
+         return Ada.Directories.Full_Name (Current_Name);
+      else
+         --  It's probably in path.  Use "which"
+         declare
+            Status   : aliased Integer := 0;
+            Which_Arg : constant GNAT.OS_Lib.Argument_List (1 .. 2) :=
+                           (1 => new String'("-v"),
+                            2 => new String'(Current_Name));
+            Response : constant String := GNAT.Expect.Get_Command_Output
+                           (Command => "command",
+                            Arguments => Which_Arg,
+                            Input => "",
+                            Status  => Status'Access);
+         begin
+            return Ada.Directories.Full_Name (Response);
+         end;
+      end if;
+   end Get_Exec_Path;
 
    function Correct_Path (Home_Dir : String; Path : String) return String is
       Corrected_Path : constant String :=
@@ -37,7 +66,7 @@ package body Settings is
       --  On windows it's "HOMEPATH", but unix is "HOME".
       Home_Env : constant String :=
         (case OS is when Windows => "HOMEPATH",
-           when others                    => "HOME");
+           when others           => "HOME");
 
       Home_Dir : constant String :=
         (if Ada.Environment_Variables.Exists (Home_Env) then
@@ -95,14 +124,16 @@ package body Settings is
          else "");
 
       Our_Settings : constant Program_Settings :=
-        (Version          => To_Unbounded_String (Version),
-         Tmp_Dir          => To_Unbounded_String (Tmp_Dir),
-         Cfg_Dir          => To_Unbounded_String (Cfg_Dir),
-         Bin_Dir          => To_Unbounded_String (Bin_Dir),
-         Home_Dir         => To_Unbounded_String (Home_Dir),
-         Path_Env         => To_Unbounded_String (Path_Env),
-         No_Update_Path   => Options.No_Update_Path,
-         Non_Interactive  => Options.Non_Interactive, Quiet => Options.Quiet);
+        (Version         => To_Unbounded_String (Version),
+         Tmp_Dir         => To_Unbounded_String (Tmp_Dir),
+         Cfg_Dir         => To_Unbounded_String (Cfg_Dir),
+         Bin_Dir         => To_Unbounded_String (Bin_Dir),
+         Home_Dir        => To_Unbounded_String (Home_Dir),
+         Path_Env        => To_Unbounded_String (Path_Env),
+         Exec_Path       => To_Unbounded_String (Get_Exec_Path),
+         No_Update_Path  => Options.No_Update_Path,
+         Non_Interactive => Options.Non_Interactive,
+         Quiet           => Options.Quiet);
    begin
       return Our_Settings;
    end Init_Settings;
