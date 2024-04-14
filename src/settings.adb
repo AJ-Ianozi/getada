@@ -35,11 +35,10 @@ package body Settings is
          --  It's probably in path.  Use "which"
          declare
             Status   : aliased Integer := 0;
-            Which_Arg : constant GNAT.OS_Lib.Argument_List (1 .. 2) :=
-                           (1 => new String'("-v"),
-                            2 => new String'(Current_Name));
+            Which_Arg : constant GNAT.OS_Lib.Argument_List (1 .. 1) :=
+                           (1 => new String'(Current_Name));
             Response : constant String := GNAT.Expect.Get_Command_Output
-                           (Command => "command",
+                           (Command => "which",
                             Arguments => Which_Arg,
                             Input => "",
                             Status  => Status'Access);
