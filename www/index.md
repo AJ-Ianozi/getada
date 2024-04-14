@@ -24,7 +24,7 @@ Download the [Windows Installer](https://github.com/alire-project/alire/releases
 ### Mac or Linux?
 Run the following command in your terminal:
 ```sh
-curl --proto '=https' -sSf https://getada.dev/sh | sh
+curl --proto '=https' -sSf https://getada.dev/init.sh | sh
 ```
 
 ### BSD?
@@ -38,7 +38,7 @@ Or find an Ada community on:
 - [Libera.Chat (IRC)](https://kiwiirc.com/nextclient/irc.libera.chat/?nick=Adaer|?#Ada)
 - [Matrix](https://gitter.im/ada-lang/Lobby/)
 - [Telegram](https://t.me/ada_lang)
-- [Discord](https://discord.com/invite/ada-lang)
+- [Discord](https://discord.gg/edM2czVKN4)
 
 ### Other Resources
 

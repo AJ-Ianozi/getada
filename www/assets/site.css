@@ -19,7 +19,7 @@ a {
 }
 #site_header {
 	min-height: 200px;
-	margin-bottom: 0/*1em*/;
+	margin-bottom: 1em;
 	overflow:auto;
 }
 #site_header img
@@ -38,7 +38,7 @@ a {
 	margin: auto;
 	padding: 1em;
 	padding-left: 2em;
-	/*border-radius: 25px;*/
+	border-radius: 25px;
 
 
 	  min-height: 500px;
@@ -48,7 +48,7 @@ a {
 	  justify-content: flex-start;
 }
 #site_footer {
-	margin-top: 0/*1em*/;
+	margin-top: 1em;
 	padding: 1em;
 	text-align: center;
 }
