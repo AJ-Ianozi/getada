@@ -454,6 +454,7 @@ package body Installer is
       --  At this point alr works, time to add it to path if requested.
       if not Our_Settings.No_Update_Path then
          declare
+            Already_Created : Boolean := False;
             procedure Add_Env_To_Config (Config : Shell_Config) is
                Full_Path : constant String :=
                  Home_Dir & "/" & To_String (Config.Config_File);
@@ -462,17 +463,19 @@ package body Installer is
                  Cfg_Dir & "/" & Get_Shell_Env (Config.Shell);
                Command : constant String :=
                  Get_Env_Command (Config.Shell, Env_Path);
+               Env_File : File_Type;
             begin
                --  If the env for this shell does not exist
-               if not Ada.Directories.Exists (Env_Path) then
-                  declare
-                     Env_File : File_Type;
-                  begin
+               if not Already_Created then
+                  if Ada.Directories.Exists (Env_Path) then
+                     Open (Env_File, Out_File, Env_Path);
+                  else
                      Create (Env_File, Out_File, Env_Path);
-                     Write_Env_File (Config.Shell, Env_File, Bin_Dir);
-                     Close (Env_File);
-                     Log.Logit (Created_Env_File, Success, Env_Path);
-                  end;
+                  end if;
+                  Write_Env_File (Config.Shell, Env_File, Bin_Dir);
+                  Close (Env_File);
+                  Already_Created := True;
+                  Log.Logit (Created_Env_File, Success, Env_Path);
                end if;
             --  If the current profile exists, read through it to check for our
             --  command to add.
