@@ -17,6 +17,11 @@
 
 with Ada.Characters.Latin_1;
 package Defaults is
+   --  Exceptions
+   Invalid_Version, Invalid_Download, Invalid_File, No_Environment_Variable,
+   Platform_Not_Yet_Supported, User_Aborted, Graceful_Exit,
+   Missing_Dependency : exception;
+
    --  About GetAda
    Getada_Version : constant String := "1.0.0-rc"; --  Must match alire.toml
 
@@ -35,7 +40,9 @@ package Defaults is
    Ver_Env : constant String := "GETADA_ALIRE_VERSION"; --  Override latest ver
 
    --  Alire binary file
-   Alire : constant String := "alr";
+   Alire_Command : constant String := "alr";
+   -- Getada binary file
+   Getada_Command : constant String := "getada";
 
    --  Messages
    NL : constant String :=
@@ -51,14 +58,14 @@ package Defaults is
    Help_Message : constant String :=
      "Options: " & NL &
      "-h --help: Print this message and exit." & NL &
-     "-s --show-version: Print the version of this binary and exit." & NL &
+     "-v --version: Print the version of this binary and exit." & NL &
      "-p --no-path: Don't update path." & NL &
      "-n --non-interactive: Suppress prompts; answer with defaults." & NL &
      "-q --quiet: Be quiet (does not suppress propmts)" & NL &
      "-t /directory --tmp=/directory: Location of tmp directory " & NL &
      "-c /directory --cfg=/directory: Set config directory " & NL &
      "-b /directory --bin=/directory: Set binary directory " & NL &
-     "-v x.y.z --version=x.y.z: Download a specific version of alire." & NL &
+     "-a x.y.z --alire-version=x.y.z: Download version x.y.z of alire." & NL &
      "-u --uninstall: Uninstall Alire. This only works if Alire was" & NL &
      "                installed with GetAda.  Works out of the box if" & NL &
      "                default directory was used, otherwise you must" & NL &

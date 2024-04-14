@@ -14,7 +14,7 @@
 --
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+with Console_IO; use Console_IO;
 package Commands is
    --  Possible commands that are supported.
    --  We need at least curl or wget.
@@ -26,4 +26,8 @@ package Commands is
    type Command_Supported is array (Possible_Commands'Range) of Boolean;
    --  Generated commands supported function
    function Test_Commands return Command_Supported;
+   --  Tests a binary, tries to troubleshoot and get it working via chmod +x
+   function Test_Binary
+      (Binary_To_Test : String; IO : C_IO; Ignore_IO : Boolean := False)
+   return Boolean;
 end Commands;
