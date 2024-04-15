@@ -23,7 +23,6 @@ with Uninstaller; use Uninstaller;
 with Options;     use Options;
 with Settings;    use Settings;
 with Ada.Text_IO; use Ada.Text_IO;
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 procedure Getada is
 
@@ -88,12 +87,10 @@ begin
             "----------------------------------------" &
             "----------------------------------------";
       end case;
-      --  Create settings and start installer or uninstaller
+      --  Take our settings and start installer or uninstaller
       declare
          Settings : constant Program_Settings := Init_Settings (Options);
       begin
-         --  Put the location getada executable has been found.
-         Put_Line ("""getada"" detected at " & To_String (Settings.Exec_Path));
          if Options.Uninstall then
             --  Start our uninstaller.
             Uninstall (Settings);
