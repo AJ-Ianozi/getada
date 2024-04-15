@@ -107,7 +107,8 @@ package body Installer is
            "I will attempt to fetch version """ & Version & """"
          else "No version has been specified. Will attempt to install the " &
            "latest version of Alire." &
-           IO.Say (NL & "(To specify a version, pass --version=x.y.z)")) &
+           IO.Say (NL &
+            "(To specify a version, pass --alire-version=x.y.z)")) &
         NL & "Temporary files will be stored in a folder in: " &
         NL & Tmp_Dir & NL &
         IO.Say
