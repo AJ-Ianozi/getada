@@ -23,6 +23,28 @@ with Prompts; use Prompts;
 with Defaults;
 package body Files is
 
+   --  Returns true if "Dir_Path" contains "File"
+   function Directory_Contains
+      (Dir_Path : String;
+       File : String;
+       Which_Kind : Ada.Directories.File_Kind)
+      return Boolean
+   is
+      Next_Item     : Directory_Entry_Type;
+      Directory_Search : Search_Type;
+   begin
+      Start_Search (Directory_Search, Dir_Path, "");
+      while More_Entries (Directory_Search) loop
+         Get_Next_Entry (Directory_Search, Next_Item);
+         if Kind (Next_Item) = Which_Kind and then
+            Simple_Name (Next_Item) = File
+         then
+            return True;
+         end if;
+      end loop;
+      return False;
+   end Directory_Contains;
+
    --  Creates a random string.
    function Random_String (Str_Len : Natural) return String is
       Alpha_Num : constant array (1 .. 62) of Character :=

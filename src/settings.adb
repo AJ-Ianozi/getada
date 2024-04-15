@@ -14,16 +14,20 @@
 --
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+pragma Ada_2022;
 with Ada.Environment_Variables;
 with Ada.Strings.Fixed;
 with Ada.Command_Line;
 with Ada.Directories;
-with GNAT.OS_Lib;
-with GNAT.Expect;
 with Platform;
+with Commands;
 with Defaults;
+with Files;
+with Common;
 package body Settings is
-   function Get_Exec_Path return String is
+   function Get_Exec_Path
+      (Home_Dir : String; Path_Dir : String)
+   return String is
       use Ada.Strings.Fixed;
       --  The command used to call the program
       Current_Name : constant String := Ada.Command_Line.Command_Name;
@@ -31,20 +35,35 @@ package body Settings is
       --  If this isn't a folder in PATH.  Easy.
       if Index (Current_Name, "/") > 0 then
          return Ada.Directories.Full_Name (Current_Name);
+      elsif Path_Dir'Length = 0 then
+         raise No_Environment_Variable
+             with "Getada was called from PATH but " &
+                   "no PATH environment variable found!";
       else
-         --  It's probably in path.  Use "which"
          declare
-            Status   : aliased Integer := 0;
-            Which_Arg : constant GNAT.OS_Lib.Argument_List (1 .. 1) :=
-                           (1 => new String'(Current_Name));
-            Response : constant String := GNAT.Expect.Get_Command_Output
-                           (Command => "which",
-                            Arguments => Which_Arg,
-                            Input => "",
-                            Status  => Status'Access);
+            Split_Path : constant Common.String_Vectors.Vector :=
+                           Common.Split (Path_Dir, ":");
          begin
-            return Ada.Directories.Full_Name (Response);
+            for P of reverse Split_Path
+               when Files.Directory_Contains
+                           (Correct_Path (Home_Dir, P),
+                            Current_Name,
+                            Ada.Directories.Ordinary_File)
+            loop
+               declare
+                  Result : constant String :=
+                     Correct_Path (Home_Dir, P) & "/" & Current_Name;
+               begin
+                  --  If this file is executabe, then this is our file.
+                  if Commands.Is_Executable (Result) then
+                     return Ada.Directories.Full_Name (Result);
+                  end if;
+               end;
+            end loop;
          end;
+         --  If we made it this far, it doesn't exist in PATH and must be in
+         --  the local folder.
+         return Ada.Directories.Full_Name (Current_Name);
       end if;
    end Get_Exec_Path;
 
@@ -129,7 +148,8 @@ package body Settings is
          Bin_Dir         => To_Unbounded_String (Bin_Dir),
          Home_Dir        => To_Unbounded_String (Home_Dir),
          Path_Env        => To_Unbounded_String (Path_Env),
-         Exec_Path       => To_Unbounded_String (Get_Exec_Path),
+         Exec_Path       => To_Unbounded_String (Get_Exec_Path
+                                                   (Home_Dir, Path_Env)),
          No_Update_Path  => Options.No_Update_Path,
          Non_Interactive => Options.Non_Interactive,
          Quiet           => Options.Quiet);

@@ -41,7 +41,7 @@ package Defaults is
 
    --  Alire binary file
    Alire_Command : constant String := "alr";
-   -- Getada binary file
+   --  Getada binary file
    Getada_Command : constant String := "getada";
 
    --  Messages

@@ -30,4 +30,6 @@ package Commands is
    function Test_Binary
       (Binary_To_Test : String; IO : C_IO; Ignore_IO : Boolean := False)
    return Boolean;
+   --  Checks if a file based on the full path is executable or not.
+   function Is_Executable (Path : String) return Boolean;
 end Commands;

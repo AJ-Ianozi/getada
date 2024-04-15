@@ -54,7 +54,8 @@ package body Installer is
       --  then this will break.
       --  Also this won't work on Windows :)
       if Exists (Zip_File, "bin/alr") then
-         Extract (from => File, what => "bin/alr", rename => Defaults.Alire_Command);
+         Extract (from => File, what => "bin/alr",
+                  rename => Defaults.Alire_Command);
       elsif Exists (Zip_File, "bin/alr.exe") then
          Extract
            (from   => File, what => "bin/alr",
@@ -86,8 +87,8 @@ package body Installer is
       Alire_Binary : constant String :=
         Bin_Dir & "/" & Defaults.Alire_Command &
         (if Platform.OS = Windows then ".exe" else "");
-      
-      -- The final resting place of the getada binary
+
+      --  The final resting place of the getada binary
       Getada_Binary : constant String :=
          Bin_Dir & "/" & Defaults.Getada_Command &
         (if Platform.OS = Windows then ".exe" else "");
@@ -118,64 +119,20 @@ package body Installer is
           (NL & "(This can be changed either by setting the """ &
            Defaults.Cfg_Env &
            """ environment variable or passing --cfg=/directory/here)" & NL) &
-        NL & "Alire's binary will be installed as """ & Defaults.Alire_Command &
-        """ in " & "the following location:" & NL & Bin_Dir & NL &
+            NL & "Alire's binary will be installed as """ &
+            Defaults.Alire_Command &
+            """ in " & "the following location:" & NL & Bin_Dir & NL &
         IO.Say
           (NL & "(This can be changed either by setting the """ &
            Defaults.Bin_Env & """ " &
            "environment variable or passing --bin=/directory/here)" & NL);
-      
+
       --  Our available commands
       Available_Command : constant Command_Supported := Test_Commands;
 
    begin
 
-      --  Check if the platform is currently supported by alire.
-      --  If etiher alire or I start building/distributing binaries for alr
-      --  then this can be updated.
-      case OS is
-         when MacOS =>
-            if Arch not in x86_64 | aarch64 then
-               raise Defaults.Platform_Not_Yet_Supported with NL &
-               "----------------------------------------" &
-               "----------------------------------------" & NL &
-               "Currently only x86_64/aarch64 is supported on MacOS" & NL &
-               "Alire may be built from source code from " & NL &
-               "https://github.com/alire-project/alire" & NL &
-               "----------------------------------------" &
-               "----------------------------------------";
-            end if;
-         when Linux =>
-            if Arch /= x86_64 then
-               raise Defaults.Platform_Not_Yet_Supported with NL &
-               "----------------------------------------" &
-               "----------------------------------------" & NL &
-               "Currently only x86_64 is supported on Linux" & NL &
-               "Alire may be built from source code from " & NL &
-               "https://github.com/alire-project/alire" & NL &
-               "----------------------------------------" &
-               "----------------------------------------";
-            end if;
-         when Windows =>
-            raise Defaults.Platform_Not_Yet_Supported with NL &
-            "----------------------------------------" &
-            "----------------------------------------" & NL &
-            "NOTE: Windows installation is not ready yet!" & NL &
-            " I recommend using alire's installer on https://alire.ada.dev/" &
-            NL & "----------------------------------------" &
-            "----------------------------------------";
-         when FreeBSD =>
-            raise Defaults.Platform_Not_Yet_Supported with NL &
-            "----------------------------------------" &
-            "----------------------------------------" & NL &
-            "NOTE: FreeBSD installation is not ready yet!" & NL &
-            "Please install Alire via ports: " & NL &
-            "https://cgit.freebsd.org/ports/log/devel/alire" & NL &
-            "----------------------------------------" &
-            "----------------------------------------";
-      end case;
-
-      if not Available_Command (curl) and then Available_Command (wget) then 
+      if not Available_Command (curl) and then Available_Command (wget) then
          raise Defaults.Missing_Dependency
            with NL &
            "----------------------------------------" &
@@ -444,7 +401,7 @@ package body Installer is
          raise Defaults.Invalid_File
                with Getada_Binary &
                " is not a valid executible by this system.";
-      end if;      
+      end if;
       if not Test_Binary (Getada_Binary, IO) then
          raise Defaults.Invalid_File
                with Getada_Binary &
@@ -530,7 +487,7 @@ package body Installer is
       IO.Say_Line ("");
       if Our_Settings.No_Update_Path then
          IO.Say_Line
-            (Bin_Dir & " was not added to PATH and you may want to do that.");         
+            (Bin_Dir & " was not added to PATH and you may want to do that.");
       else
          IO.Say_Line ("You may need to restart your shell.");
          IO.Say_Line ("Doing so should add """ & Bin_Dir & """ to $PATH.");

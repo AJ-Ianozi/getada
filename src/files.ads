@@ -14,7 +14,7 @@
 --
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+with Ada.Directories;
 package Files is
    --  Returns if a line exists in a given file.  If the file doesn't exist,
    --  it will return False.
@@ -24,6 +24,11 @@ package Files is
    function Unique_Dir
       (Parent : String; No_Prompt : Boolean := True)
    return String;
+   --  Returns true if "Dir_Path" contains "File"
+   function Directory_Contains (Dir_Path : String;
+       File : String;
+       Which_Kind : Ada.Directories.File_Kind)
+      return Boolean;
 private
    function Random_String (Str_Len : Natural) return String;
 end Files;

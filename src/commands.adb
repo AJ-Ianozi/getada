@@ -16,8 +16,8 @@
 --    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 with Ada.Characters.Handling; use Ada.Characters.Handling;
+with Ada.Strings.Fixed;
 with GNAT.Expect;             use GNAT.Expect;
-with Ada.Text_IO;             use Ada.Text_IO;
 with GNAT.OS_Lib;
 with Platform; use Platform;
 package body Commands is
@@ -34,6 +34,25 @@ package body Commands is
           Success      => Successfully_Executed);
       return Successfully_Executed;
    end Test_Command;
+
+   function Is_Executable (Path : String) return Boolean is
+      Test_Arg : constant GNAT.OS_Lib.Argument_List (1 .. 1) :=
+         (1 => new String'(Path));
+   begin
+      declare
+         Status   : aliased Integer := 0;
+         Response : constant String :=
+                     Get_Command_Output
+                     (Command => "file",
+                     Arguments => Test_Arg,
+                     Input => "",
+                     Status  => Status'Access);
+      begin
+         return Ada.Strings.Fixed.Index (Response, "executable") > 0;
+      exception
+         when others => return False;
+      end;
+   end Is_Executable;
 
    function Test_Commands return Command_Supported is
       Test_Args : constant GNAT.OS_Lib.Argument_List (1 .. 1) :=
@@ -120,7 +139,7 @@ package body Commands is
                end;
                Tested (Macos_xattr) := True;
             else -- not chmod_tried
-               return false;
+               return False;
             end if;
          else
             if not Ignore_IO then
@@ -129,7 +148,7 @@ package body Commands is
             exit Test_Alire;
          end if;
       end loop Test_Alire;
-      return true;
+      return True;
    end Test_Binary;
 
 end Commands;

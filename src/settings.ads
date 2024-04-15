@@ -39,5 +39,5 @@ package Settings is
 
 private
    function Correct_Path (Home_Dir : String; Path : String) return String;
-   function Get_Exec_Path return String;
+   function Get_Exec_Path (Home_Dir : String; Path_Dir : String) return String;
 end Settings;

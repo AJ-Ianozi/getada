@@ -16,12 +16,14 @@
 --    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pragma Assertion_Policy (Check);
-with Defaults;
+with Defaults;    use Defaults;
+with Platform;    use Platform;
 with Installer;   use Installer;
 with Uninstaller; use Uninstaller;
 with Options;     use Options;
 with Settings;    use Settings;
 with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 procedure Getada is
 
@@ -32,19 +34,66 @@ begin
 
    --  Welcome the user to our program :)
    if not Options.Quiet and then not Options.Show_Version then
-      Put_Line (Defaults.Welcome_Message);
+      Put_Line (Welcome_Message);
    end if;
 
    if Options.Show_Help then
       --  Just show the help message and exit. -q won't count.
-      Put_Line (Defaults.Help_Message);
+      Put_Line (Help_Message);
    elsif Options.Show_Version then
       --  Just show the version and exit.  -q won't count.
-      Put_Line (Defaults.Getada_Command & " " & Defaults.Getada_Version);
+      Put_Line (Getada_Command & " " & Getada_Version);
    else
+      --  Check if the platform is currently supported by alire.
+      --  If etiher alire or I start building/distributing binaries for alr
+      --  then this can be updated.
+      case OS is
+         when MacOS =>
+            if Arch not in x86_64 | aarch64 then
+               raise Platform_Not_Yet_Supported with NL &
+               "----------------------------------------" &
+               "----------------------------------------" & NL &
+               "Currently only x86_64/aarch64 is supported on MacOS" & NL &
+               "Alire may be built from source code from " & NL &
+               "https://github.com/alire-project/alire" & NL &
+               "----------------------------------------" &
+               "----------------------------------------";
+            end if;
+         when Linux =>
+            if Arch /= x86_64 then
+               raise Platform_Not_Yet_Supported with NL &
+               "----------------------------------------" &
+               "----------------------------------------" & NL &
+               "Currently only x86_64 is supported on Linux" & NL &
+               "Alire may be built from source code from " & NL &
+               "https://github.com/alire-project/alire" & NL &
+               "----------------------------------------" &
+               "----------------------------------------";
+            end if;
+         when Windows =>
+            raise Platform_Not_Yet_Supported with NL &
+            "----------------------------------------" &
+            "----------------------------------------" & NL &
+            "NOTE: Windows installation is not supported by this tool!" & NL &
+            " Please use alire's installer on https://alire.ada.dev/" &
+            NL & "----------------------------------------" &
+            "----------------------------------------";
+         when FreeBSD =>
+            raise Platform_Not_Yet_Supported with NL &
+            "----------------------------------------" &
+            "----------------------------------------" & NL &
+            "NOTE: FreeBSD installation is not ready yet!" & NL &
+            "Please install Alire via ports: " & NL &
+            "https://cgit.freebsd.org/ports/log/devel/alire" & NL &
+            "----------------------------------------" &
+            "----------------------------------------";
+      end case;
+      --  Create settings and start installer or uninstaller
       declare
          Settings : constant Program_Settings := Init_Settings (Options);
       begin
+         --  Put the location getada executable has been found.
+         Put_Line ("""getada"" detected at " & To_String (Settings.Exec_Path));
          if Options.Uninstall then
             --  Start our uninstaller.
             Uninstall (Settings);
@@ -55,7 +104,7 @@ begin
       end;
    end if;
 exception
-   when Defaults.User_Aborted =>
+   when User_Aborted =>
       Put_Line ("Aborted... Closing program.");
-   when Defaults.Graceful_Exit => null;
+   when Graceful_Exit => null;
 end Getada;
