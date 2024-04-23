@@ -6,40 +6,61 @@ This is my attempt at an installer for Alire.  It currently supports all non-win
 
 For Windows, please use the current windows installer exe located on [Alire's Releases Page](https://github.com/alire-project/alire/releases).
 
-It is in very early beta, so please report any bugs you find!
-
 ## Requirements
-Right now `chmod` and `curl` are required to run this.  On Windows I recommend using the installer on alire.ada.dev.
+Right now `chmod` and (`curl` or `wget`) are required to run this.
 
 ## How to get it?
-Easiest way is to download the latest .zip, extract it, and run it.
+On Mac and Linux with `curl` installed, the easiest way is to copy and paste the following command in your terminal:
+```sh
+curl --proto '=https' -sSf https://www.getada.dev/init.sh | sh
+```
+
+You can also download the latest zip release, extract it, and run it.
 
 If you want to build it, you can also clone this repository, `cd` to the directory, then build it with `alr update && alr build` in Alire.
 
 ### On MacOS
-If you're running on MacOS, and you get a message about the program not being verified, then run the following command on the extracted `getada` binary before attempting to run it.  E.g.:
+If you're installing without he above curl command and you get a message about the program not being verified on MacOS, then run the following command on the extracted `getada` binary before attempting to run it.  E.g.:
 ```
 xattr -d com.apple.quarantine ./getada
 ```
 
-Hopefully this can be solved in due time.
-
 ## How does it work?
 Once downloaded, simply run the application as-is, and it will prompt you to install Alire.  For instructions on how to use it, run `getada --help` or `getada -h`.
 
-It will download the latest version of Alire for your platform as a zip file to a metadata directory and then extract it to a binary directory.  By default the metadata directory is `~/.cache/getada`, the config directory is `~/.getada`, and the `alr` binary goes in `~/.getada/bin`.
+It will download the latest version of Alire for your platform as a zip file to a temporary directory and then extract it to a binary directory.  By default the temporary directory is whatever `mktmp` normally puts out.  The config directory is `~/.getada`, and the `alr` and `getada` binaries go in `~/.getada/bin`.
 
 After extracting, it will then add the binary directory to your path, by creating a `env.sh` file (for sh/zsh/bash; other shells like `fish` are possible in the future) that adds the directory to $PATH if it doesn't already exist.  That file will be sourced in the shell's default env file (e.g. `.profile`).
 
-## How to remove what it's done?
-If you want to undo everything that GetAda did, simply run `getada --uninstall`.  If you want to do this manually, `alr` from the binary directory as well as all of the files in the `alr config`.  You'll also need to remove the source in the shell's profiles.
+If you don't want to restart your shell, you'll have to `source` that file manually.  The installer tells you how to do this once successfully installed.
 
-### NOTE: Early beta with more on the way
-This software is experimental software that is still in the early stages. The default directories and other methods are subject to change. For example, Alire uses `~/.config/alire/` for most of its files, and GetAda may follow.  I also want to bring in the bash autocomplete (and create a zsh autocomplete) and include that in the env.sh.
+To create a new ada project, simply run:
+```sh
+alr init --bin new_project
+```
+This will create a new ada project in the folder "new_project".
+
+To add, for example, json support to your project, run
+```sh
+alr with json
+```
+
+Check out all of the available alire crates on https://alire.ada.dev/crates.html
+
+To build an ada project, run:
+```sh
+alr build
+```
+
+For more information, check out [alire.ada.dev](https://alire.ada.dev) and [Ada-lang.io's tutorial](https://https://ada-lang.io/docs/learn/tutorial/hello-world#starting-a-new-project).
+
+## How to remove what it's done?
+If you want to undo everything that GetAda did, simply run `getada --uninstall`.  If you want to do this manually, remove `alr` from the binary directory as well as all of the files in the config directory.  You'll also need to remove the source in the shell's profiles.
+
+### Contributing
+I also want to bring in the bash autocomplete (and create a zsh autocomplete) and include that in the env.sh, but that's later.  Someday I would like to remove the `curl`/`wget` dependency and Ada Web Server, but that involves moving off github for the releases.
 
 There's plenty of TODOs in the code, specifically in the `installer.adb` file, and I'm sure this could be better optimized and reworked.
-
-However, things do look stable, so I'm working to have a shell script that can be ran in the command prompt that will automatically download GetAda and run it.
 
 ### License
 Getada is copyright A.J. Ianozi and Getada contributors.

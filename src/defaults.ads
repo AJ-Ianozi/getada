@@ -23,7 +23,7 @@ package Defaults is
    Missing_Dependency : exception;
 
    --  About GetAda
-   Getada_Version : constant String := "1.0.0-rc"; --  Must match alire.toml
+   Getada_Version : constant String := "1.0.0"; --  Must match alire.toml
 
    --  Directories, starting at root.
    Tmp_Dir  : constant String := "/tmp"; --  Location in temporary directory

@@ -481,7 +481,7 @@ package body Installer is
       IO.Say_Line ("");
       IO.Say_Line ("To create a new ada project, simply run:");
       IO.Say_Line ("""alr init --bin new_project""");
-      IO.Say_Line ("This will create a new ada in the folder ""new_project""");
+      IO.Say_Line ("to have a new ada project in the folder ""new_project""");
       IO.Say_Line ("To build an ada project, run ""alr build""");
       IO.Say_Line ("Have a tutorial to start on your first project:");
       IO.Say_Line ("https://ada-lang.io/docs/learn/tutorial/hello-world");
