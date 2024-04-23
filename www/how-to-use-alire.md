@@ -13,36 +13,46 @@
 -- If you have enabled creating Atom feed for the site, you must specify "title" tag for this page. If you want to use this file as a main source of Atom feed, then you must add "title" tag for each section which will be used as source for Atom feed entry. If you want to set author name for Atom feed, you must add "author" tag or setting Author from configuration file will be used. When you want to set author email for Atom feed, you must add "authoremail" tag. If you want to add short entry summary, you must add tag "summary". Do that tag will be for whole page or for each entry depends on your Atom feed configuration.
 -- You can also specify canonical link for the page. If you don't set it here, the program will generate it automatically. To set the default canonical link for the page set tag "canonicallink". It must be a full URL (with https://).
 -- By setting "author" tag for the page, you can overwrite the configuration setting for meta tag author for the page.
--- title: Get Ada installed on your computer today
+-- title: How to use Alire
 -- You can without problem delete all this comments from this file.
 
-## Get Alire for your platform of choice
+## How to use alire?
+Check out [GetAda.dev](https://getada.dev) on how to get alire.
 
-### On Windows?
-Download the [Windows Installer](https://github.com/alire-project/alire/releases/download/v2.0.0/alr-2.0.0-installer-x86_64-windows.exe) on [alire.ada.dev](https://alire.ada.dev/)
-
-### Mac or Linux?
-Run the following command in your terminal:
+### Create a new ada project
 ```sh
-curl --proto '=https' -sSf https://getada.dev/init.sh | sh
+alr init --bin new_project
+```
+This will create a new ada project in the folder "new_project".
+
+### Add a dependency
+```sh
+# for example, json support
+alr with json
+```
+Check out [all of the available alire crates](https://alire.ada.dev/crates.html).
+
+### Edit a project
+```sh
+alr edit
+```
+Don't use [GNAT Studio](https://github.com/AdaCore/gnatstudio)? Check out the [Ada Language Server](https://github.com/AdaCore/ada_language_server) and open the project folder with emacs, vim, vscode, or your editor of choice.
+
+#### Set alr edit to your editor of choice
+```sh
+# For example, vscode
+alr settings --global --set editor.cmd "code ."
 ```
 
-### BSD?
-Get Alire on [FreshPorts](https://www.freshports.org/devel/alire/)
+### Select your toolchain
+```sh
+alr toolchain --select
+```
+The default is gnat-native, which is the compiler for whatever system you're running, but you can even cross-compile.
 
-## How to use Alire?
-Check out this [summary on using Alire](how-to-use-alire.html).
+### Compile your project
+```sh
+alr build
+```
 
-## Have a question?
-
-Join the [Ada-Lang.io Forums](https://forum.ada-lang.io/)
-
-Or find an Ada community on:
-- [Libera.Chat (IRC)](https://kiwiirc.com/nextclient/irc.libera.chat/?nick=Adaer|?#Ada)
-- [Matrix](https://gitter.im/ada-lang/Lobby/)
-- [Telegram](https://t.me/ada_lang)
-- [Discord](https://discord.gg/edM2czVKN4)
-
-### Other Resources
-
-Interested in more Ada-related resources? Check out [Ada-Lang.io](https://ada-lang.io) and [Awesome Ada](https://github.com/ohenley/awesome-ada).
+Get started with [Ada-lang.io's tutorial](https://https://ada-lang.io/docs/learn/tutorial/hello-world#starting-a-new-project).
