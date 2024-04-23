@@ -24,7 +24,7 @@ Download the [Windows Installer](https://github.com/alire-project/alire/releases
 ### Mac or Linux?
 Run the following command in your terminal:
 ```sh
-curl --proto '=https' -sSf https://getada.dev/init.sh | sh
+curl --proto '=https' -sSf https://www.getada.dev/init.sh | sh
 ```
 
 ### BSD?
