@@ -55,4 +55,4 @@ The default is gnat-native, which is the compiler for whatever system you're run
 alr build
 ```
 
-Get started with [Ada-lang.io's tutorial](https://https://ada-lang.io/docs/learn/tutorial/hello-world#starting-a-new-project).
+Get started with [Ada-lang.io's tutorial](https://ada-lang.io/docs/learn/tutorial/hello-world#starting-a-new-project).
