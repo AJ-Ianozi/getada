@@ -15,6 +15,7 @@
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+pragma Ada_2022;
 --  for downloader:
 --  TODO: Add this when AWS can support https in alire
 --    with AWS.Client;
@@ -24,8 +25,7 @@
 with GNAT.Expect;    use GNAT.Expect;
 with GNAT.OS_Lib;
 --  Required for reading the json versions and getting the download URL.
-with JSON.Parsers;
-with JSON.Types;
+with GNATCOLL.JSON;
 
 with Console_IO;  use Console_IO;
 with Shells;      use Shells;
@@ -226,6 +226,7 @@ package body Installer is
       --  Download / extract Alire
       declare
          function Download_URL return String is
+            use GNATCOLL.JSON;
    --  TODO: Also maybe download gnat and build from source for unknown archs?
    --  Also, some linux distros don't use glibc, so we may need to get a
    --  version of Alire that is not built against libc. Bootstrap?
@@ -261,41 +262,41 @@ package body Installer is
                  when FreeBSD => "", -- Need self hosted runners to build this
                  when Windows => "bin-x86_64-windows.zip");
             --  the json parser stuff
-            package Types is new JSON.Types (Long_Integer, Long_Float);
-            package Parsers is new JSON.Parsers (Types);
-
-            Parser : Parsers.Parser :=
-              Parsers.Create
-                ((if Response (Response'First) = '{' then Response
-                  else raise Defaults.Invalid_Download
+            Result : constant JSON_Value :=
+               Read ((if Response (Response'First) = '{' then Response
+                      else raise Defaults.Invalid_Download
                       with "Unable to download from the following URL: '" &
                       URL & "'... Expecting JSON but got: " & Response));
-            Value : constant Types.JSON_Value := Parser.Parse;
-
-            use Types;
          begin
-            if Value.Kind = Object_Kind and then Value.Contains ("assets")
-              and then Value ("assets").Kind = Array_Kind
+            if Result.Kind = JSON_Object_Type and then
+               Result.Has_Field ("assets") and then
+               Result.Get ("assets").Kind = JSON_Array_Type
             then
-               for Element of Value ("assets") loop
-                  declare
-                     Download_URL : constant String :=
-                       Element ("browser_download_url").Image;
-                  begin
-                     if Index (Download_URL, Suffex) > 0 then
-                        return
-                          (if
-                             Download_URL (Download_URL'First) = '"'
-                             and then Download_URL (Download_URL'Last) = '"'
-                             and then Download_URL'First /= Download_URL'Last
-                           then
-                             Download_URL
-                               (Download_URL'First + 1 ..
-                                    Download_URL'Last - 1)
-                           else Download_URL);
-                     end if;
-                  end;
-               end loop;
+               declare
+                  Value : constant JSON_Array := Result.Get ("assets");
+               begin
+                  for Element of Value
+                     when Element.Has_Field ("browser_download_url")
+                  loop
+                     declare
+                        Download_URL : constant String :=
+                        Element.Get ("browser_download_url");
+                     begin
+                        if Index (Download_URL, Suffex) > 0 then
+                           return
+                           (if
+                              Download_URL (Download_URL'First) = '"'
+                              and then Download_URL (Download_URL'Last) = '"'
+                              and then Download_URL'First /= Download_URL'Last
+                              then
+                              Download_URL
+                                 (Download_URL'First + 1 ..
+                                       Download_URL'Last - 1)
+                              else Download_URL);
+                        end if;
+                     end;
+                  end loop;
+               end;
             end if;
             raise Defaults.Invalid_Version
               with "Unable to find alire download of version: " &
