@@ -12,6 +12,10 @@ maintainers-logins = ["AJ-Ianozi"]
 
 executables = ["getada"]
 
+[available.'case(os)']
+windows = false
+'...' = true
+
 [[depends-on]]
 json = "^5.0.3"
 zipada = "^58.0.0"
