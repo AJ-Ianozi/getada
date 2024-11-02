@@ -16,3 +16,4 @@ Thumbs.db
 *.msm
 *.msp
 *.code-workspace
+.vscode

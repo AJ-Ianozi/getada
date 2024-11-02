@@ -257,7 +257,9 @@ package body Installer is
                  Status  => Status'Access);
             Suffex : constant String :=
               (case OS is
-                 when MacOS   => "bin-x86_64-macos.zip",
+                 when MacOS   => (if Arch = aarch64 then
+                                    "bin-aarch64-macos.zip"
+                                  else "bin-x86_64-macos.zip"),
                  when Linux   => "bin-x86_64-linux.zip",
                  when FreeBSD => "", -- Need self hosted runners to build this
                  when Windows => "bin-x86_64-windows.zip");
