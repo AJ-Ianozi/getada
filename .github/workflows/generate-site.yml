@@ -17,9 +17,14 @@ jobs:
          - name: Checkout
            uses: actions/checkout@v3
 
-         - name: Build_Website
-           uses: AnimMouse/setup-appimage@v1
-           with:
-             name: yass
-             url: https://github.com/yet-another-static-site-generator/yass/releases/download/v3.0/yass-x86_64.AppImage
-         - run: yass version
+         - name: Install YASS
+           uses: robinraju/release-downloader@v1
+            with:
+               repository: 'yet-another-static-site-generator/yass'
+               fileName: 'yass-linux_x86_64.zip '
+               latest: true
+               extract: true
+         
+         - name: Compile Yass
+            run: >
+            ls -la
