@@ -78,8 +78,9 @@ jobs:
 
       - name: Add alire to path
         run: >
+          ls -la &&
           mkdir alire &&
-          mv *-bin-aarch64-macos/alr alire/ &&
+          mv *bin-aarch64-macos/alr alire/ &&
           echo "$PWD/alire" >> $GITHUB_PATH
           alr toolchain --disable-assistant --select
 
