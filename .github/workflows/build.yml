@@ -73,14 +73,15 @@ jobs:
         with:
           repository: 'alire-project/alire'
           fileName: '*-bin-aarch64-macos.zip'
+          out-file-path: 'alire'
           latest: true
           extract: true
 
       - name: Add alire to path
         run: >
-          ls -la &&
-          mkdir alire &&
-          mv *bin-aarch64-macos/alr alire/ &&
+#          ls -la &&
+#          mkdir alire &&
+#          mv *bin-aarch64-macos/alr alire/ &&
           echo "$PWD/alire" >> $GITHUB_PATH
           alr toolchain --disable-assistant --select
 
