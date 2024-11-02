@@ -69,7 +69,17 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up alire
-        uses: alire-project/setup-alire@v3
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: 'alire-project/alire'
+          fileName: '*-bin-aarch64-macos.zip'
+          latest: true
+          extract: true
+        run: >
+          mkdir alire &&
+          mv *-bin-aarch64-macos/alr alire/ &&
+          echo "$PWD/alire" >> $GITHUB_PATH
+          alr toolchain --disable-assistant --select
 
       - name: Build getada
         run: >
