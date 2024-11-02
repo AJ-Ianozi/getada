@@ -79,7 +79,8 @@ jobs:
 
       - name: Add alire to path
         run: >
-          echo "$PWD/alire" >> $GITHUB_PATH
+          ls "$PWD/alire" &&
+          echo "$PWD/alire" >> $GITHUB_PATH &&
           alr toolchain --disable-assistant --select
 
       - name: Build getada
