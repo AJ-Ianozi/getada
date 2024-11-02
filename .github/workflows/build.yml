@@ -78,7 +78,9 @@ jobs:
           extract: true
 
       - name: Add alire to path
-        run: echo "$PWD/alire/bin" >> $GITHUB_PATH
+        run: >
+          chmod +x alire/bin/alr &&
+          echo "$PWD/alire/bin" >> $GITHUB_PATH
 
       - name: Configure alire
         run: alr toolchain --disable-assistant --select
