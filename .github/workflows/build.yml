@@ -75,6 +75,8 @@ jobs:
           fileName: '*-bin-aarch64-macos.zip'
           latest: true
           extract: true
+
+      - name: Add alire to path
         run: >
           mkdir alire &&
           mv *-bin-aarch64-macos/alr alire/ &&
