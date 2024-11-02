@@ -83,7 +83,7 @@ jobs:
           echo "$PWD/alire/bin" >> $GITHUB_PATH
 
       - name: Configure alire
-        run: alr toolchain --disable-assistant --select
+        run: alr -n toolchain --disable-assistant --select
 
       - name: Build getada
         run: >
