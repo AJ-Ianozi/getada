@@ -19,12 +19,12 @@ jobs:
 
          - name: Install YASS
            uses: robinraju/release-downloader@v1
-            with:
-               repository: 'yet-another-static-site-generator/yass'
-               fileName: 'yass-linux_x86_64.zip '
-               latest: true
-               extract: true
+           with:
+            repository: 'yet-another-static-site-generator/yass'
+            fileName: 'yass-linux_x86_64.zip '
+            latest: true
+            extract: true
          
          - name: Compile Yass
-            run: >
-            ls -la
+           run: >
+             ls -la
