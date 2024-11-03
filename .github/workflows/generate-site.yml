@@ -52,9 +52,9 @@ jobs:
             extract: true
 
          - name: Add yass to path
-            run: >
-              chmod +x yass_gen/yass &&
-              echo "$PWD/yass_gen" >> $GITHUB_PATH
+           run: >
+            chmod +x yass_gen/yass &&
+            echo "$PWD/yass_gen" >> $GITHUB_PATH
 
          - name: Build website
            run: >
