@@ -17,11 +17,24 @@ jobs:
          - name: Checkout
            uses: actions/checkout@v3
 
+           - name: Install YASS
+           uses: robinraju/release-downloader@v1
+           with:
+            repository: 'yet-another-static-site-generator/yass'
+            out-file-path: 'yass_gen'
+            fileName: 'yass-linux_x86_64.zip '
+            latest: true
+            extract: true
+
+         - name: Add yass to path
+           run: >
+            chmod +x yass_gen/yass &&
+            echo "$PWD/yass_gen" >> $GITHUB_PATH
+
          # I'm sure there's a better way to do this....
          - name: Download aarch64 mac binary
            uses: robinraju/release-downloader@v1
            with:
-             repository: 'aj-ianozi/getada'
              out-file-path: 'macos_aarch64'
              fileName: 'getada-macos_aarch64.zip'
              latest: true
@@ -42,20 +55,6 @@ jobs:
             fileName: 'getada-linux_x86_64.zip'
             latest: true
             extract: true 
-
-         - name: Install YASS
-           uses: robinraju/release-downloader@v1
-           with:
-            repository: 'yet-another-static-site-generator/yass'
-            out-file-path: 'yass_gen'
-            fileName: 'yass-linux_x86_64.zip '
-            latest: true
-            extract: true
-
-         - name: Add yass to path
-           run: >
-            chmod +x yass_gen/yass &&
-            echo "$PWD/yass_gen" >> $GITHUB_PATH
 
          - name: Build website
            run: >
