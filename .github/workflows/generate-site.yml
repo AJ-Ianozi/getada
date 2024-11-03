@@ -21,6 +21,7 @@ jobs:
          - name: Download aarch64 mac binary
            uses: robinraju/release-downloader@v1
            with:
+             repository: 'aj-ianozi/getada'
              out-file-path: 'macos_aarch64'
              fileName: 'getada-macos_aarch64.zip'
              latest: true
