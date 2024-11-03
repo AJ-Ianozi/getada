@@ -17,7 +17,7 @@ jobs:
          - name: Checkout
            uses: actions/checkout@v3
 
-           - name: Install YASS
+         - name: Install YASS
            uses: robinraju/release-downloader@v1
            with:
             repository: 'yet-another-static-site-generator/yass'
