@@ -19,7 +19,7 @@
 ## Get Alire for your platform of choice
 
 ### On Windows?
-Download the [Windows Installer](https://github.com/alire-project/alire/releases/download/v2.0.0/alr-2.0.0-installer-x86_64-windows.exe) on [alire.ada.dev](https://alire.ada.dev/)
+Download the [Windows Installer](https://github.com/alire-project/alire/releases/download/v2.0.2/alr-2.0.2-installer-x86_64-windows.exe) on [alire.ada.dev](https://alire.ada.dev/)
 
 ### Mac or Linux?
 Run the following command in your terminal:
