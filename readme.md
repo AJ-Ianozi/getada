@@ -52,7 +52,7 @@ To build an ada project, run:
 alr build
 ```
 
-For more information, check out [alire.ada.dev](https://alire.ada.dev) and [Ada-lang.io's tutorial](https://https://ada-lang.io/docs/learn/tutorial/hello-world#starting-a-new-project).
+For more information, check out [alire.ada.dev](https://alire.ada.dev) and [Ada-lang.io's tutorial](https://ada-lang.io/docs/learn/tutorial/hello-world#starting-a-new-project).
 
 ## How to remove what it's done?
 If you want to undo everything that GetAda did, simply run `getada --uninstall`.  If you want to do this manually, remove `alr` from the binary directory as well as all of the files in the config directory.  You'll also need to remove the source in the shell's profiles.
