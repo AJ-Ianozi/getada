@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  ###  Build on linux
+  ###  Build on x86-64 linux
   build-linux_x86_64:
 
     runs-on: ubuntu-20.04
@@ -34,6 +34,46 @@ jobs:
          name: getada-linux_x86_64.zip
          path: getada-linux_x86_64.zip
 
+
+  build-macos_aarch64:
+    runs-on: ubuntu-22.04-arm
+
+    steps: 
+    
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up alire
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: 'alire-project/alire'
+          fileName: 'alr-nightly-bin-aarch64-linux.zip'
+          out-file-path: 'alire'
+          latest: true
+          extract: true
+
+      - name: Add alire to path
+        run: >
+          chmod +x alire/bin/alr &&
+          echo "$PWD/alire/bin" >> $GITHUB_PATH
+
+      - name: Configure alire
+        run: alr -n toolchain --disable-assistant --select
+
+      - name: Build getada
+        run: >
+         alr -n update &&
+         alr -n build --release
+
+      - name: Compress getada
+        run: zip -r getada-macos_aarch64.zip bin
+    
+      - name: Uploadgetada
+        uses: actions/upload-artifact@v4
+        with:
+         name: getada-linux_aarch64.zip
+         path: getada-linux_aarch64.zip
+         
   ###  x86-64 MacOS
   build-macos_x86_64:
     runs-on: macos-12
