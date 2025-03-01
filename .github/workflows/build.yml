@@ -51,6 +51,7 @@ jobs:
           out-file-path: 'alire'
           latest: true
           extract: true
+          preRelease: true
 
       - name: Add alire to path
         run: >
