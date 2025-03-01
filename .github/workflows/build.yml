@@ -35,7 +35,7 @@ jobs:
          path: getada-linux_x86_64.zip
 
 
-  build-macos_aarch64:
+  build-linux_aarch64:
     runs-on: ubuntu-22.04-arm
 
     steps: 
