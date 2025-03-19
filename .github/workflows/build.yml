@@ -77,7 +77,7 @@ jobs:
          
   ###  x86-64 MacOS
   build-macos_x86_64:
-    runs-on: macos-12
+    runs-on: macos-15-large
 
     steps: 
     
