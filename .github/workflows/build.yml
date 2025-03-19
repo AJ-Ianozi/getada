@@ -67,7 +67,7 @@ jobs:
          alr -n build --release
 
       - name: Compress getada
-        run: zip -r getada-macos_aarch64.zip bin
+        run: zip -r getada-linux_aarch64.zip bin
     
       - name: Uploadgetada
         uses: actions/upload-artifact@v4
