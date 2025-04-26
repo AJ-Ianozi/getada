@@ -59,11 +59,11 @@ begin
                "----------------------------------------";
             end if;
          when Linux =>
-            if Arch /= x86_64 then
+            if Arch not in x86_64 | aarch64 then
                raise Platform_Not_Yet_Supported with NL &
                "----------------------------------------" &
                "----------------------------------------" & NL &
-               "Currently only x86_64 is supported on Linux" & NL &
+               "Currently only x86_64/aarch64 is supported on MacOS" & NL &
                "Alire may be built from source code from " & NL &
                "https://github.com/alire-project/alire" & NL &
                "----------------------------------------" &

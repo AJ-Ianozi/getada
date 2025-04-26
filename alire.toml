@@ -1,6 +1,6 @@
 name = "getada"
 description = "The unofficial mac and linux installer for Alire."
-version = "1.0.1"
+version = "1.0.2"
 licenses = "GPL-3.0-only"
 
 website = "https://www.getada.dev/"

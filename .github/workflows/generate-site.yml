@@ -54,13 +54,23 @@ jobs:
             out-file-path: 'linux_x86_64'
             fileName: 'getada-linux_x86_64.zip'
             latest: true
-            extract: true 
+            extract: true
+
+          - name: Download aarch64 linux binary
+            uses: robinraju/release-downloader@v1
+            with:
+             out-file-path: 'linux_aarch64'
+             fileName: 'getada-linux_aarch64.zip'
+             latest: true
+             extract: true
 
          - name: Build website
            run: >
              yass build www &&
              cp -v linux_x86_64/bin/getada www/_output/dist/x86_64-unknown-linux-gnu/ &&
              ls www/_output/dist/x86_64-unknown-linux-gnu/getada &&
+             cp -v linux_aarch64/bin/getada www/_output/dist/aarch64-unknown-linux-gnu/ &&
+             ls www/_output/dist/aarch64-unknown-linux-gnu/getada &&
              cp -v macos_aarch64/bin/getada www/_output/dist/aarch64-apple-darwin/ &&
              ls www/_output/dist/aarch64-apple-darwin/getada &&
              cp -v macos_x86_64/bin/getada www/_output/dist/x86_64-apple-darwin/ &&

@@ -37,6 +37,7 @@ with Platform;    use Platform;
 with Commands;    use Commands;
 with Options;
 
+with Ada.Characters.Handling;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Text_IO;       use Ada.Text_IO;
 
@@ -227,6 +228,7 @@ package body Installer is
       declare
          function Download_URL return String is
             use GNATCOLL.JSON;
+            use Ada.Characters.Handling;
    --  TODO: Also maybe download gnat and build from source for unknown archs?
    --  Also, some linux distros don't use glibc, so we may need to get a
    --  version of Alire that is not built against libc. Bootstrap?
@@ -256,13 +258,8 @@ package body Installer is
                 (Command => Cmd, Arguments => Args, Input => "",
                  Status  => Status'Access);
             Suffex : constant String :=
-              (case OS is
-                 when MacOS   => (if Arch = aarch64 then
-                                    "bin-aarch64-macos.zip"
-                                  else "bin-x86_64-macos.zip"),
-                 when Linux   => "bin-x86_64-linux.zip",
-                 when FreeBSD => "", -- Need self hosted runners to build this
-                 when Windows => "bin-x86_64-windows.zip");
+               "bin-" & To_Lower (Arch'Image) &
+               "-"    & To_Lower (OS'Image) & ".zip";
             --  the json parser stuff
             Result : constant JSON_Value :=
                Read ((if Response (Response'First) = '{' then Response
