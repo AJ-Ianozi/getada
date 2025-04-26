@@ -69,4 +69,11 @@ jobs:
         cp -v macos_aarch64/bin/getada www/_output/dist/aarch64-apple-darwin/ &&
         ls www/_output/dist/aarch64-apple-darwin/getada &&
         cp -v macos_x86_64/bin/getada www/_output/dist/x86_64-apple-darwin/ &&
-        ls www/_output/dist/x86_64-apple-darwin/getada
+        ls www/_output/dist/x86_64-apple-darwin/getada &&
+        cp getada-download.sh www/_output/init.sh
+
+    - name: Upload Site
+      uses: actions/upload-artifact@v4
+      with:
+        name: getada-website
+        path: www/_output
