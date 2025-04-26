@@ -24,15 +24,14 @@ jobs:
       run: >
         alr -n update &&
         alr -n build --release
-  
-    - name: Compress getada
-      run: zip -r getada-linux_x86_64.zip bin
 
     - name: Uploadgetada
       uses: actions/upload-artifact@v4
       with:
-         name: getada-linux_x86_64.zip
-         path: getada-linux_x86_64.zip
+         name: getada-linux_x86_64
+         path: |
+           bin/
+           license.txt
 
 
   build-linux_aarch64:
@@ -65,15 +64,14 @@ jobs:
         run: >
          alr -n update &&
          alr -n build --release
-
-      - name: Compress getada
-        run: zip -r getada-linux_aarch64.zip bin
     
       - name: Uploadgetada
         uses: actions/upload-artifact@v4
         with:
-         name: getada-linux_aarch64.zip
-         path: getada-linux_aarch64.zip
+         name: getada-linux_aarch64
+         path: |
+           bin/
+           license.txt
          
   ###  x86-64 MacOS
   build-macos_x86_64:
@@ -91,15 +89,14 @@ jobs:
         run: >
          alr -n update &&
          alr -n build --release
-
-      - name: Compress getada
-        run: zip -r getada-macos_x86_64.zip bin
     
       - name: Uploadgetada
         uses: actions/upload-artifact@v4
         with:
-         name: getada-macos_x86_64.zip
-         path: getada-macos_x86_64.zip
+         name: getada-macos_x86_64
+         path: |
+           bin/
+           license.txt
 
   build-macos_aarch64:
     runs-on: macos-14
@@ -130,15 +127,14 @@ jobs:
         run: >
          alr -n update &&
          alr -n build --release
-
-      - name: Compress getada
-        run: zip -r getada-macos_aarch64.zip bin
     
       - name: Uploadgetada
         uses: actions/upload-artifact@v4
         with:
-         name: getada-macos_aarch64.zip
-         path: getada-macos_aarch64.zip
+         name: getada-macos_aarch64
+         path: |
+           bin/
+           license.txt
 
 ###  Test on windows
 ###  I removed this because you shouldn't be using windows for getada.
@@ -166,20 +162,3 @@ jobs:
 #        with:
 #         name: getada-win.zip
 #         path: getada-win.zip
-
-
-
-###  Don't have toolchains for gnat on aarch64
-#  build-linux_aarch64:
-#    runs-on: macos-14
-#    
-#    steps: 
-#    
-#      - name: Checkout
-#        uses: actions/checkout@v3
-#
-#      - name: Install Homebrew
-#        run: |
-#         brew tap messense/macos-cross-toolchains
-#         brew install aarch64-unknown-linux-gnu
-#         aarch64-linux-gnu-gcc -v

@@ -1,4 +1,4 @@
---    Copyright (C) 2022-2024 A.J. Ianozi <aj@ianozi.com>
+--    Copyright (C) 2022-2025 A.J. Ianozi <aj@ianozi.com>
 --
 --    This file is part of GetAda: the Unofficial Alire Installer
 --
