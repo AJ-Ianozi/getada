@@ -19,11 +19,11 @@ jobs:
     - name: Install YASS
       uses: robinraju/release-downloader@v1
       with:
-      repository: 'yet-another-static-site-generator/yass'
-      out-file-path: 'yass_gen'
-      fileName: 'yass-linux_x86_64.zip '
-      latest: true
-      extract: true
+        repository: 'yet-another-static-site-generator/yass'
+        out-file-path: 'yass_gen'
+        fileName: 'yass-linux_x86_64.zip '
+        latest: true
+        extract: true
 
     - name: Add yass to path
       run: >
