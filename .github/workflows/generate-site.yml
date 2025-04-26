@@ -27,9 +27,9 @@ jobs:
 
     - name: Add yass to path
       run: >
-        ls "$PWD/yass_gen/" &&
-        chmod +x "$PWD/yass_gen/yass" &&
-        echo "$PWD/yass_gen" >> $GITHUB_PATH
+        ls "$PWD/yass_gen/yass-linux_x86_64" &&
+        chmod +x "$PWD/yass_gen/yass-linux_x86_64/yass" &&
+        echo "$PWD/yass_gen/yass-linux_x86_64" >> $GITHUB_PATH
 
     # I'm sure there's a better way to do this....
     - name: Download aarch64 mac binary
