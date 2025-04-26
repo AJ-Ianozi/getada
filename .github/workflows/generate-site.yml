@@ -9,68 +9,68 @@ on:
 #    https://github.com/yet-another-static-site-generator/yass/releases/tag/v3.0
 
 jobs:
-   Generate_Website:
-      runs-on: ubuntu-20.04
+  Generate_Website:
+    runs-on: ubuntu-22.04
 
-      steps:
-         - name: Checkout
-           uses: actions/checkout@v3
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
 
-         - name: Install YASS
-           uses: robinraju/release-downloader@v1
-           with:
-            repository: 'yet-another-static-site-generator/yass'
-            out-file-path: 'yass_gen'
-            fileName: 'yass-linux_x86_64.zip '
-            latest: true
-            extract: true
+    - name: Install YASS
+      uses: robinraju/release-downloader@v1
+      with:
+      repository: 'yet-another-static-site-generator/yass'
+      out-file-path: 'yass_gen'
+      fileName: 'yass-linux_x86_64.zip '
+      latest: true
+      extract: true
 
-         - name: Add yass to path
-           run: >
-            chmod +x "$PWD/yass_gen/yass" &&
-            echo "$PWD/yass_gen" >> $GITHUB_PATH
+    - name: Add yass to path
+      run: >
+      chmod +x "$PWD/yass_gen/yass" &&
+      echo "$PWD/yass_gen" >> $GITHUB_PATH
 
-         # I'm sure there's a better way to do this....
-         - name: Download aarch64 mac binary
-           uses: robinraju/release-downloader@v1
-           with:
-             out-file-path: 'macos_aarch64'
-             fileName: 'getada-macos_aarch64.zip'
-             latest: true
-             extract: true
+    # I'm sure there's a better way to do this....
+    - name: Download aarch64 mac binary
+      uses: robinraju/release-downloader@v1
+      with:
+        out-file-path: 'macos_aarch64'
+        fileName: 'getada-macos_aarch64.zip'
+        latest: true
+        extract: true
 
-         - name: Download x86_64 mac binary
-           uses: robinraju/release-downloader@v1
-           with:
-            out-file-path: 'macos_x86_64'
-            fileName: 'getada-macos_x86_64.zip'
-            latest: true
-            extract: true
+    - name: Download x86_64 mac binary
+      uses: robinraju/release-downloader@v1
+      with:
+      out-file-path: 'macos_x86_64'
+      fileName: 'getada-macos_x86_64.zip'
+      latest: true
+      extract: true
 
-         - name: Download x86_64 linux binary
-           uses: robinraju/release-downloader@v1
-           with:
-            out-file-path: 'linux_x86_64'
-            fileName: 'getada-linux_x86_64.zip'
-            latest: true
-            extract: true
+    - name: Download x86_64 linux binary
+      uses: robinraju/release-downloader@v1
+      with:
+      out-file-path: 'linux_x86_64'
+      fileName: 'getada-linux_x86_64.zip'
+      latest: true
+      extract: true
 
-          - name: Download aarch64 linux binary
-            uses: robinraju/release-downloader@v1
-            with:
-             out-file-path: 'linux_aarch64'
-             fileName: 'getada-linux_aarch64.zip'
-             latest: true
-             extract: true
+    - name: Download aarch64 linux binary
+      uses: robinraju/release-downloader@v1
+      with:
+        out-file-path: 'linux_aarch64'
+        fileName: 'getada-linux_aarch64.zip'
+        latest: true
+        extract: true
 
-         - name: Build website
-           run: >
-             yass build www &&
-             cp -v linux_x86_64/bin/getada www/_output/dist/x86_64-unknown-linux-gnu/ &&
-             ls www/_output/dist/x86_64-unknown-linux-gnu/getada &&
-             cp -v linux_aarch64/bin/getada www/_output/dist/aarch64-unknown-linux-gnu/ &&
-             ls www/_output/dist/aarch64-unknown-linux-gnu/getada &&
-             cp -v macos_aarch64/bin/getada www/_output/dist/aarch64-apple-darwin/ &&
-             ls www/_output/dist/aarch64-apple-darwin/getada &&
-             cp -v macos_x86_64/bin/getada www/_output/dist/x86_64-apple-darwin/ &&
-             ls www/_output/dist/x86_64-apple-darwin/getada
+    - name: Build website
+      run: >
+        yass build www &&
+        cp -v linux_x86_64/bin/getada www/_output/dist/x86_64-unknown-linux-gnu/ &&
+        ls www/_output/dist/x86_64-unknown-linux-gnu/getada &&
+        cp -v linux_aarch64/bin/getada www/_output/dist/aarch64-unknown-linux-gnu/ &&
+        ls www/_output/dist/aarch64-unknown-linux-gnu/getada &&
+        cp -v macos_aarch64/bin/getada www/_output/dist/aarch64-apple-darwin/ &&
+        ls www/_output/dist/aarch64-apple-darwin/getada &&
+        cp -v macos_x86_64/bin/getada www/_output/dist/x86_64-apple-darwin/ &&
+        ls www/_output/dist/x86_64-apple-darwin/getada
