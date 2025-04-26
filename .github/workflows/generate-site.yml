@@ -42,18 +42,18 @@ jobs:
     - name: Download x86_64 mac binary
       uses: robinraju/release-downloader@v1
       with:
-      out-file-path: 'macos_x86_64'
-      fileName: 'getada-macos_x86_64.zip'
-      latest: true
-      extract: true
+        out-file-path: 'macos_x86_64'
+        fileName: 'getada-macos_x86_64.zip'
+        latest: true
+        extract: true
 
     - name: Download x86_64 linux binary
       uses: robinraju/release-downloader@v1
       with:
-      out-file-path: 'linux_x86_64'
-      fileName: 'getada-linux_x86_64.zip'
-      latest: true
-      extract: true
+        out-file-path: 'linux_x86_64'
+        fileName: 'getada-linux_x86_64.zip'
+        latest: true
+        extract: true
 
     - name: Download aarch64 linux binary
       uses: robinraju/release-downloader@v1
