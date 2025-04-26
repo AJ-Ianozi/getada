@@ -16,6 +16,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
+    - name: Install libcmark
+      run: |
+        sudo apt-get update
+        sudo apt-get install libcmark-dev
+
     - name: Install YASS
       uses: robinraju/release-downloader@v1
       with:
