@@ -23,9 +23,8 @@ jobs:
       run: >
         mkdir -p "$PWD/yass_gen" &&
         alr -n install yass --prefix="$PWD/yass_gen" &&
-        tree "$PWD/yass_gen" &&
-        chmod +x "$PWD/yass_gen/yass" &&
-        echo "$PWD/yass_gen" >> $GITHUB_PATH
+        chmod +x "$PWD/yass_gen/bin/yass" &&
+        echo "$PWD/yass_gen/bin" >> $GITHUB_PATH
 
     # I'm sure there's a better way to do this....
     - name: Download aarch64 mac binary
