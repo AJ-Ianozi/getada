@@ -16,25 +16,15 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Install libcmark
-      run: |
-        sudo apt-get update
-        sudo apt-get install libcmark-dev
+    - name: Set up alire
+      uses: alire-project/setup-alire@v3
 
     - name: Install YASS
-      uses: robinraju/release-downloader@v1
-      with:
-        repository: 'yet-another-static-site-generator/yass'
-        out-file-path: 'yass_gen'
-        fileName: 'yass-linux_x86_64.zip '
-        latest: true
-        extract: true
-
-    - name: Add yass to path
       run: >
-        ls "$PWD/yass_gen/yass-linux_x86_64" &&
-        chmod +x "$PWD/yass_gen/yass-linux_x86_64/yass" &&
-        echo "$PWD/yass_gen/yass-linux_x86_64" >> $GITHUB_PATH
+        mkdir -p "$PWD/yass_gen" &&
+        alr install yass -n --prefix="$PWD/yass_gen" &&
+        chmod +x "$PWD/yass_gen/yass" &&
+        echo "$PWD/yass_gen" >> $GITHUB_PATH
 
     # I'm sure there's a better way to do this....
     - name: Download aarch64 mac binary
