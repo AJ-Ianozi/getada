@@ -75,7 +75,7 @@ jobs:
          
   ###  x86-64 MacOS
   build-macos_x86_64:
-    runs-on: macos-13
+    runs-on: macos-15-intel
 
     steps: 
     
@@ -99,7 +99,7 @@ jobs:
            license.txt
 
   build-macos_aarch64:
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps: 
     
