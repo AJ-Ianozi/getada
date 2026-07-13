@@ -21,6 +21,6 @@ os-unknown = true
 '...' = false
 
 [[depends-on]]
-gnatcoll = "^24.0.0"
-zipada = "^58.0.0"
+gnatcoll = "^26.0.0"
+zipada = "^62.0.0"
 gnat = ">=12 & <2000"
